@@ -187,6 +187,13 @@ const DietPlanner = () => {
                 isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
               }`}>Diet Planner</h1>
             </div>
+            <div className="hidden sm:block">
+              <img 
+                src="/photo11.png" 
+                alt="Diet Planner" 
+                className="w-12 h-12 rounded-full object-cover shadow-lg"
+              />
+            </div>
           </div>
         </div>
       </div>

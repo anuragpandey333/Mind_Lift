@@ -366,8 +366,8 @@ const Dashboard = ({ setIsAuthenticated }) => {
               'Mood Tracker': './photo3.png',
               'Mentorship': './photo4.png',
               'Fitness Tracker': './photo5.png',
-              'Diet Planner': './photo3.png',
-              'Scheduler': './photo4.png',
+              'Diet Planner': './photo11.png',
+              'Scheduler': './photo12.png',
               'AI Chatbot': './photo6.png'
             };
             
