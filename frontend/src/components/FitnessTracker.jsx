@@ -15,9 +15,22 @@ const FitnessTracker = () => {
   const [waterIntake, setWaterIntake] = useState(0)
 
   useEffect(() => {
+    const theme = localStorage.getItem('theme')
+    setIsToggled(theme === 'dark')
     fetchFitnessProfile()
     fetchWorkouts()
     fetchDietPlan()
+    
+    // Track page visit
+    const activity = {
+      id: Date.now(),
+      type: 'fitness',
+      action: 'Visited Fitness Tracker',
+      timestamp: new Date().toLocaleString()
+    }
+    const existingActivities = JSON.parse(localStorage.getItem('recentActivities') || '[]')
+    const updatedActivities = [activity, ...existingActivities.slice(0, 4)]
+    localStorage.setItem('recentActivities', JSON.stringify(updatedActivities))
   }, [])
 
   const fetchFitnessProfile = async () => {

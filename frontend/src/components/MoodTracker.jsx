@@ -19,6 +19,17 @@ const MoodTracker = () => {
     const theme = localStorage.getItem('theme')
     setIsToggled(theme === 'dark')
     fetchMoodEntries()
+    
+    // Track page visit
+    const activity = {
+      id: Date.now(),
+      type: 'mood',
+      action: 'Visited Mood Tracker',
+      timestamp: new Date().toLocaleString()
+    }
+    const existingActivities = JSON.parse(localStorage.getItem('recentActivities') || '[]')
+    const updatedActivities = [activity, ...existingActivities.slice(0, 4)]
+    localStorage.setItem('recentActivities', JSON.stringify(updatedActivities))
   }, [])
 
   const fetchMoodEntries = async () => {
