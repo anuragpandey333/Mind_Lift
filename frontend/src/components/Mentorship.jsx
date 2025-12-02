@@ -11,6 +11,9 @@ const Mentorship = () => {
 
   const [showAddMentorForm, setShowAddMentorForm] = useState(false)
   const [customMentors, setCustomMentors] = useState([])
+  const [showConnectedPopup, setShowConnectedPopup] = useState(false)
+  const [expandedBios, setExpandedBios] = useState({})
+  const [expandedSpecs, setExpandedSpecs] = useState({})
 
   const [newMentorData, setNewMentorData] = useState({
     name: '',
@@ -286,10 +289,10 @@ const Mentorship = () => {
         {activeTab === 'mentors' && (
           <>
             {/* Search and Filter */}
-            <div className={`rounded-2xl shadow-lg p-6 mb-6 ${
+            <div className={`rounded-2xl shadow-lg p-4 sm:p-6 mb-6 ${
               isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
             }`}>
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className="relative">
                   <input
                     type="text"
@@ -325,9 +328,17 @@ const Mentorship = () => {
             </div>
 
             {/* Mentors Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {filteredMentors.map(mentor => (
-                <div key={mentor.id} className={`rounded-2xl shadow-lg hover:shadow-xl transition-all overflow-hidden ${
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {filteredMentors.map(mentor => {
+                const bioLimit = 50
+                const specLimit = 2
+                const isExpandedBio = expandedBios[mentor.id]
+                const isExpandedSpec = expandedSpecs[mentor.id]
+                const truncatedBio = mentor.bio.length > bioLimit ? mentor.bio.substring(0, bioLimit) + '...' : mentor.bio
+                const visibleSpecs = isExpandedSpec ? mentor.specialization : mentor.specialization.slice(0, specLimit)
+                
+                return (
+                <div key={mentor.id} className={`rounded-2xl shadow-lg hover:shadow-xl transition-all overflow-hidden h-full flex flex-col ${
                   isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
                 }`}>
                   <div className={`p-6 text-white ${
@@ -341,7 +352,7 @@ const Mentorship = () => {
                     <p className="text-indigo-200 text-center text-sm">{mentor.company}</p>
                   </div>
                   
-                  <div className="p-6">
+                  <div className="p-6 flex-1 flex flex-col">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-1">
                         <span className="text-yellow-400">⭐</span>
@@ -358,8 +369,8 @@ const Mentorship = () => {
                       <div className={`text-sm font-semibold mb-2 ${
                         isToggled ? 'text-[#8FABD4]' : 'text-gray-700'
                       }`}>Specialization:</div>
-                      <div className="flex flex-wrap gap-2">
-                        {mentor.specialization.map((spec, idx) => (
+                      <div className="flex flex-wrap gap-2 min-h-[2.5rem]">
+                        {visibleSpecs.map((spec, idx) => (
                           <span key={idx} className={`px-3 py-1 rounded-full text-xs font-medium ${
                             isToggled ? 'bg-[#4A70A9]/20 text-[#8FABD4]' : 'bg-indigo-100 text-indigo-700'
                           }`}>
@@ -367,13 +378,25 @@ const Mentorship = () => {
                           </span>
                         ))}
                       </div>
+                      {mentor.specialization.length > specLimit && (
+                        <button
+                          onClick={() => setExpandedSpecs(prev => ({...prev, [mentor.id]: !prev[mentor.id]}))}
+                          className={`mt-2 text-xs font-semibold px-2 py-1 rounded-full transition-all ${
+                            isToggled 
+                              ? 'bg-[#4A70A9]/20 text-[#8FABD4] hover:bg-[#4A70A9]/30' 
+                              : 'bg-indigo-100 text-indigo-600 hover:bg-indigo-200'
+                          }`}
+                        >
+                          {isExpandedSpec ? 'Show less' : `+${mentor.specialization.length - specLimit} more`}
+                        </button>
+                      )}
                     </div>
 
                     <div className="mb-4">
                       <div className={`text-sm font-semibold mb-2 ${
                         isToggled ? 'text-[#8FABD4]' : 'text-gray-700'
                       }`}>Focus Areas:</div>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2 min-h-[2rem]">
                         {mentor.focus.map((f, idx) => (
                           <span key={idx} className={`px-3 py-1 rounded-full text-xs font-medium ${
                             isToggled ? 'bg-[#8FABD4]/20 text-[#8FABD4]' : 'bg-purple-100 text-purple-700'
@@ -384,9 +407,25 @@ const Mentorship = () => {
                       </div>
                     </div>
 
-                    <p className={`text-sm mb-4 ${
-                      isToggled ? 'text-[#8FABD4]/90' : 'text-gray-600'
-                    }`}>{mentor.bio}</p>
+                    <div className="mb-4 flex-1">
+                      <p className={`text-sm ${
+                        isToggled ? 'text-[#8FABD4]/90' : 'text-gray-600'
+                      }`}>
+                        {isExpandedBio ? mentor.bio : truncatedBio}
+                      </p>
+                      {mentor.bio.length > bioLimit && (
+                        <button
+                          onClick={() => setExpandedBios(prev => ({...prev, [mentor.id]: !prev[mentor.id]}))}
+                          className={`mt-2 text-sm font-semibold px-3 py-1 rounded-full transition-all ${
+                            isToggled 
+                              ? 'bg-[#4A70A9]/20 text-[#8FABD4] hover:bg-[#4A70A9]/30' 
+                              : 'bg-indigo-100 text-indigo-600 hover:bg-indigo-200'
+                          }`}
+                        >
+                          {isExpandedBio ? 'Show less' : 'Show more'}
+                        </button>
+                      )}
+                    </div>
 
                     <div className={`flex items-center gap-2 text-sm mb-4 ${
                       isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
@@ -406,7 +445,7 @@ const Mentorship = () => {
                       }`}>
                         <div className="flex items-center gap-2">
                           <span>📧</span>
-                          <span>{mentor.contact.email}</span>
+                          <span className="truncate">{mentor.contact.email}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <span>📱</span>
@@ -414,13 +453,14 @@ const Mentorship = () => {
                         </div>
                         <div className="flex items-center gap-2">
                           <span>💼</span>
-                          <span>{mentor.contact.linkedin}</span>
+                          <span className="truncate">{mentor.contact.linkedin}</span>
                         </div>
                       </div>
                     </div>
 
                     <button
-                      className={`w-full font-semibold py-3 rounded-lg transition-all ${
+                      onClick={() => setShowConnectedPopup(true)}
+                      className={`w-full font-semibold py-3 rounded-lg transition-all mt-auto ${
                         isToggled 
                           ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/80 text-white' 
                           : 'bg-[#8FABD4] hover:bg-[#8FABD4]/80 text-white'
@@ -430,7 +470,8 @@ const Mentorship = () => {
                     </button>
                   </div>
                 </div>
-              ))}
+                )
+              })}
             </div>
           </>
         )}
@@ -447,7 +488,7 @@ const Mentorship = () => {
                 isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
               }`}>Helpful Resources</h2>
               
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className={`border-2 rounded-xl p-6 transition-all ${
                   isToggled ? 'border-[#8FABD4]/30 hover:border-[#4A70A9]' : 'border-indigo-200 hover:border-indigo-400'
                 }`}>
@@ -546,6 +587,43 @@ const Mentorship = () => {
           </div>
         )}
 
+        {/* Connected Success Popup */}
+        {showConnectedPopup && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className={`rounded-2xl shadow-2xl max-w-md w-full ${
+              isToggled ? 'bg-[#000000]/95' : 'bg-white'
+            }`}>
+              <div className={`p-6 text-white text-center ${
+                isToggled 
+                  ? 'bg-gradient-to-br from-[#4A70A9] to-[#8FABD4]'
+                  : 'bg-gradient-to-br from-[#8FABD4] to-[#4A70A9]'
+              }`}>
+                <div className="text-6xl mb-4">🎉</div>
+                <h2 className="text-2xl font-bold mb-2">Connected Successfully!</h2>
+                <p className="text-indigo-100">Thanks for getting connected</p>
+              </div>
+
+              <div className="p-6 text-center">
+                <p className={`mb-6 ${
+                  isToggled ? 'text-[#8FABD4]' : 'text-gray-700'
+                }`}>
+                  You will shortly get the Zoom link on your email ID and registered number.
+                </p>
+                <button
+                  onClick={() => setShowConnectedPopup(false)}
+                  className={`w-full font-semibold py-3 rounded-lg transition-all text-white ${
+                    isToggled 
+                      ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/80'
+                      : 'bg-[#8FABD4] hover:bg-[#8FABD4]/80'
+                  }`}
+                >
+                  Got it!
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Add Mentor Form Modal */}
         {showAddMentorForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -562,7 +640,7 @@ const Mentorship = () => {
               </div>
 
               <div className="p-6 space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <input
                     type="text"
                     placeholder="Mentor Name *"
@@ -586,7 +664,7 @@ const Mentorship = () => {
                     }`}
                   />
                 </div>
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <input
                     type="text"
                     placeholder="Company"
@@ -621,7 +699,7 @@ const Mentorship = () => {
                       : 'bg-white border-gray-200 text-gray-800 focus:border-indigo-500 placeholder-gray-500'
                   }`}
                 />
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <input
                     type="tel"
                     placeholder="Phone Number"
@@ -668,7 +746,7 @@ const Mentorship = () => {
                   rows="3"
                 />
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex flex-col sm:flex-row gap-3 pt-4">
                   <button
                     onClick={() => {
                       setShowAddMentorForm(false)

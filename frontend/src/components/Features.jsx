@@ -133,9 +133,26 @@ const Features = () => {
               <p className={`text-lg mb-4 ${
                 isToggled ? 'text-[#8FABD4]/80' : 'text-[#000000]/80'
               }`}>{feature.description}</p>
-              <p className={`text-sm ${
+              <p className={`text-sm mb-6 ${
                 isToggled ? 'text-[#8FABD4]/60' : 'text-[#000000]/60'
               }`}>{feature.details}</p>
+              <button 
+                onClick={() => {
+                  if (feature.title === 'AI Chatbot') navigate('/ai')
+                  else if (feature.title === 'Scheduler') navigate('/scheduler')
+                  else if (feature.title === 'Diet Planner') navigate('/diet')
+                  else if (feature.title === 'Fitness Tracker') navigate('/fitness')
+                  else if (feature.title === 'Mood Tracker') navigate('/mood')
+                  else if (feature.title === 'Mentorship') navigate('/mentorship')
+                  else navigate('/login')
+                }}
+                className={`w-full text-sm font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl ${
+                  isToggled 
+                    ? 'bg-gradient-to-r from-[#4A70A9] to-[#8FABD4] text-white' 
+                    : 'bg-gradient-to-r from-[#8FABD4] to-[#4A70A9] text-white'
+                }`}>
+                Get Started
+              </button>
             </div>
           ))}
         </div>

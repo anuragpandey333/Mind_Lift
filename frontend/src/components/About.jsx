@@ -190,6 +190,28 @@ const About = () => {
             </div>
           </div>
         </div>
+
+        {/* Call to Action */}
+        <div className="text-center">
+          <h2 className={`text-3xl font-bold mb-6 transition-all duration-500 ${
+            isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
+          }`}>Ready to Start Your Wellness Journey?</h2>
+          <p className={`text-lg mb-8 max-w-2xl mx-auto transition-all duration-500 ${
+            isToggled ? 'text-[#8FABD4]/80' : 'text-[#000000]/80'
+          }`}>
+            Join thousands of students who are already improving their mental health and academic performance with MindLift.
+          </p>
+          <button
+            onClick={() => navigate('/signup')}
+            className={`text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-lg ${
+              isToggled 
+                ? 'bg-gradient-to-r from-[#4A70A9] to-[#8FABD4]' 
+                : 'bg-gradient-to-r from-[#8FABD4] to-[#4A70A9]'
+            }`}
+          >
+            Get Started
+          </button>
+        </div>
       </div>
     </div>
   );

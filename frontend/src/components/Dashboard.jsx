@@ -382,12 +382,12 @@ const Dashboard = ({ setIsAuthenticated }) => {
                       else if (feature.title === 'Mood Tracker') navigate('/mood')
                       else if (feature.title === 'Mentorship') navigate('/mentorship')
                     }}
-                    className={`w-full text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 ${
+                    className={`w-full text-sm font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl ${
                       isToggled 
-                        ? 'bg-gradient-to-r from-[#4A70A9] to-[#8FABD4] text-white hover:shadow-lg' 
-                        : 'bg-gradient-to-r from-[#8FABD4] to-[#4A70A9] text-white hover:shadow-lg'
+                        ? 'bg-gradient-to-r from-[#4A70A9] to-[#8FABD4] text-white' 
+                        : 'bg-gradient-to-r from-[#8FABD4] to-[#4A70A9] text-white'
                     }`}>
-                    Open Tool
+                    Get Started
                   </button>
                 </div>
               </div>

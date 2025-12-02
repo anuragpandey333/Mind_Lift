@@ -80,17 +80,17 @@ const Landing = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center px-4">
               <button
                 onClick={() => navigate('/signup')}
-                className={`text-white px-8 sm:px-10 py-4 sm:py-5 rounded-2xl font-bold transition-all duration-300 shadow-2xl text-base sm:text-lg ${
+                className={`text-white px-8 sm:px-10 py-4 sm:py-5 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl text-base sm:text-lg ${
                   isToggled 
                     ? 'bg-gradient-to-r from-[#4A70A9] to-[#8FABD4]' 
                     : 'bg-gradient-to-r from-[#8FABD4] to-[#4A70A9]'
                 }`}
               >
-                Start Your Journey
+                Get Started
               </button>
               <button
                 onClick={() => navigate('/login')}
-                className={`border-2 px-8 sm:px-10 py-4 sm:py-5 rounded-2xl font-bold transition-all duration-300 text-base sm:text-lg backdrop-blur-sm ${
+                className={`border-2 px-8 sm:px-10 py-4 sm:py-5 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 text-base sm:text-lg backdrop-blur-sm ${
                   isToggled 
                     ? 'border-[#4A70A9] text-[#8FABD4] hover:bg-[#4A70A9] hover:text-white bg-white/10' 
                     : 'border-[#4A70A9] text-[#4A70A9] hover:bg-[#4A70A9] hover:text-white bg-white/50'
