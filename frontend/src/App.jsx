@@ -14,6 +14,7 @@ import DietPlanner from './components/DietPlanner'
 import FitnessTracker from './components/FitnessTracker'
 import MoodTracker from './components/MoodTracker'
 import Mentorship from './components/Mentorship'
+import TaskScheduler from './components/TaskScheduler'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -62,6 +63,10 @@ function App() {
           <Route 
             path="/scheduler" 
             element={isAuthenticated ? <Scheduler /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/task-scheduler" 
+            element={isAuthenticated ? <TaskScheduler /> : <Navigate to="/login" />} 
           />
           <Route 
             path="/diet" 

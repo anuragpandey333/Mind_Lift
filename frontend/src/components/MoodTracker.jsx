@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 
 const MoodTracker = () => {
   const navigate = useNavigate()
   const [isToggled, setIsToggled] = useState(false)
   const [entries, setEntries] = useState([])
-  const [currentMood, setCurrentMood] = useState('')
   const [stressLevel, setStressLevel] = useState(5)
   const [trigger, setTrigger] = useState('')
   const [note, setNote] = useState('')
@@ -18,7 +18,20 @@ const MoodTracker = () => {
   useEffect(() => {
     const theme = localStorage.getItem('theme')
     setIsToggled(theme === 'dark')
+    fetchMoodEntries()
   }, [])
+
+  const fetchMoodEntries = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.get('http://localhost:5001/api/mood', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setEntries(response.data)
+    } catch (error) {
+      console.error('Error fetching mood entries:', error)
+    }
+  }
 
   const moods = [
     { value: 'great', label: 'Great', color: 'bg-green-500', emoji: '😊' },
@@ -32,34 +45,54 @@ const MoodTracker = () => {
     'Internships', 'Sleep Deprivation', 'Social Pressure', 'Other'
   ]
 
-  const saveMoodEntry = () => {
-    if (!currentMood) return
-
-    const newEntry = {
-      id: Date.now(),
-      mood: currentMood,
-      stressLevel,
-      trigger,
-      note,
-      sleepQuality,
-      energyLevel,
-      socialConnection,
-      physicalActivity,
-      mealPattern,
-      timestamp: new Date().toISOString(),
-      date: new Date().toLocaleDateString()
+  const saveMoodEntry = async () => {
+    try {
+      const moodLabel = stressLevel <= 3 ? 'Great' : stressLevel <= 5 ? 'Okay' : stressLevel <= 7 ? 'Stressed' : 'Overwhelmed'
+      const moodEmoji = stressLevel <= 3 ? '😊' : stressLevel <= 5 ? '😐' : stressLevel <= 7 ? '😰' : '😫'
+      
+      const token = localStorage.getItem('token')
+      await axios.post('http://localhost:5001/api/mood', {
+        mood: moodLabel.toLowerCase(),
+        moodLabel,
+        moodEmoji,
+        stressLevel,
+        trigger,
+        note,
+        sleepQuality,
+        energyLevel,
+        socialConnection,
+        physicalActivity,
+        mealPattern
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      
+      // Track activity
+      const activity = {
+        id: Date.now(),
+        type: 'mood',
+        action: `Logged mood: ${moodLabel}`,
+        timestamp: new Date().toLocaleString()
+      }
+      const existingActivities = JSON.parse(localStorage.getItem('recentActivities') || '[]')
+      const updatedActivities = [activity, ...existingActivities.slice(0, 4)]
+      localStorage.setItem('recentActivities', JSON.stringify(updatedActivities))
+      
+      // Reset form
+      setStressLevel(5)
+      setTrigger('')
+      setNote('')
+      setSleepQuality(5)
+      setEnergyLevel(5)
+      setSocialConnection(5)
+      setPhysicalActivity('')
+      setMealPattern('')
+      
+      // Refresh entries
+      fetchMoodEntries()
+    } catch (error) {
+      console.error('Error saving mood entry:', error)
     }
-
-    setEntries([newEntry, ...entries])
-    setCurrentMood('')
-    setStressLevel(5)
-    setTrigger('')
-    setNote('')
-    setSleepQuality(5)
-    setEnergyLevel(5)
-    setSocialConnection(5)
-    setPhysicalActivity('')
-    setMealPattern('')
   }
 
   const getAverageStress = () => {
@@ -68,8 +101,16 @@ const MoodTracker = () => {
     return (sum / entries.length).toFixed(1)
   }
 
-  const deleteEntry = (id) => {
-    setEntries(entries.filter(entry => entry.id !== id))
+  const deleteEntry = async (id) => {
+    try {
+      const token = localStorage.getItem('token')
+      await axios.delete(`http://localhost:5001/api/mood/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      fetchMoodEntries()
+    } catch (error) {
+      console.error('Error deleting mood entry:', error)
+    }
   }
 
   const getRecentTrend = () => {
@@ -97,7 +138,7 @@ const MoodTracker = () => {
           ? 'bg-[#000000]/90 border-[#4A70A9]/30' 
           : 'bg-[#EFECE3]/80 border-[#8FABD4]/20'
       }`}>
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button 
@@ -110,7 +151,7 @@ const MoodTracker = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <h1 className={`text-2xl font-bold ${
+              <h1 className={`text-xl sm:text-2xl font-bold ${
                 isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
               }`}>B.Tech Wellness Tracker</h1>
             </div>
@@ -118,10 +159,10 @@ const MoodTracker = () => {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6">
         {/* Quick Stats */}
         {entries.length > 0 && (
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             <div className={`rounded-xl shadow p-4 text-center ${
               isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
             }`}>
@@ -166,27 +207,7 @@ const MoodTracker = () => {
             isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
           }`}>How are you feeling today?</h2>
           
-          {/* Mood Selection */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            {moods.map((mood) => (
-              <button
-                key={mood.value}
-                onClick={() => setCurrentMood(mood.value)}
-                className={`p-4 rounded-xl border-2 transition-all ${
-                  currentMood === mood.value
-                    ? `${mood.color} text-white border-transparent scale-105`
-                    : isToggled 
-                      ? 'bg-[#000000]/40 border-[#8FABD4]/30 hover:border-[#4A70A9]'
-                      : 'bg-gray-50 border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className="text-3xl mb-2">{mood.emoji}</div>
-                <div className={`font-semibold ${
-                  currentMood === mood.value ? 'text-white' : isToggled ? 'text-[#8FABD4]' : 'text-gray-800'
-                }`}>{mood.label}</div>
-              </button>
-            ))}
-          </div>
+
 
           {/* Stress Level */}
           <div className="mb-6">
@@ -366,13 +387,10 @@ const MoodTracker = () => {
 
           <button
             onClick={saveMoodEntry}
-            disabled={!currentMood}
             className={`w-full font-semibold py-3 rounded-lg transition-all ${
-              currentMood
-                ? isToggled 
-                  ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/80 text-white' 
-                  : 'bg-[#8FABD4] hover:bg-[#8FABD4]/80 text-white'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              isToggled 
+                ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/80 text-white' 
+                : 'bg-[#8FABD4] hover:bg-[#8FABD4]/80 text-white'
             }`}
           >
             Save Check-in
@@ -407,21 +425,20 @@ const MoodTracker = () => {
             }`}>Recent Check-ins</h3>
             <div className="space-y-3">
               {entries.slice(0, 5).map((entry) => {
-                const moodData = moods.find(m => m.value === entry.mood)
                 return (
                   <div key={entry.id} className={`border-2 rounded-lg p-4 transition-all ${
                     isToggled ? 'border-[#8FABD4]/30 hover:border-[#4A70A9]' : 'border-gray-100 hover:border-gray-200'
                   }`}>
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        <span className="text-2xl">{moodData?.emoji}</span>
+                        <span className="text-2xl">{entry.moodEmoji}</span>
                         <div>
                           <div className={`font-semibold ${
                             isToggled ? 'text-[#8FABD4]' : 'text-gray-800'
-                          }`}>{moodData?.label}</div>
+                          }`}>{entry.moodLabel}</div>
                           <div className={`text-sm ${
                             isToggled ? 'text-[#8FABD4]/80' : 'text-gray-500'
-                          }`}>{entry.date}</div>
+                          }`}>{new Date(entry.createdAt).toLocaleDateString()}</div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-3">

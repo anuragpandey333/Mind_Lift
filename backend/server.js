@@ -9,7 +9,8 @@ const app = express()
 
 // Middleware
 app.use(cors({
-  origin : '*',
+  origin: 'http://localhost:5173',
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
 }))
 app.use(express.json())
@@ -32,6 +33,9 @@ app.get('/api/health', async (req, res) => {
 
 app.use('/api/auth', authRoutes)
 app.use('/api/diet', dietRoutes)
+app.use('/api/mood', require('./routes/mood'))
+app.use('/api/fitness', require('./routes/fitness'))
+app.use('/api/tasks', require('./routes/tasks'))
 
 const PORT = process.env.PORT || 5001
 

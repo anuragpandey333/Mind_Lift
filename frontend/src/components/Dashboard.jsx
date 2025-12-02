@@ -8,6 +8,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
   const [isNewUser, setIsNewUser] = useState(false)
   const [recentActivities, setRecentActivities] = useState([])
   const [stats, setStats] = useState({ daysActive: 0, moodEntries: 0, goalsAchieved: 0 })
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const deleteActivity = (activityId) => {
     const updatedActivities = recentActivities.filter(activity => activity.id !== activityId)
@@ -192,6 +193,17 @@ const Dashboard = ({ setIsAuthenticated }) => {
               }`}>Contact</button>
             </div>
             
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg"
+            >
+              <svg className={`w-6 h-6 ${
+                isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
+              }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            
             <div className="flex items-center space-x-4">
               {user && (
                 <div className="flex items-center space-x-3">
@@ -214,7 +226,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
                         {user.name.charAt(0).toUpperCase()}
                       </div>
                     )}
-                    <div className="hidden md:block">
+                    <div className="hidden sm:block">
                       <p className={`font-semibold text-sm ${
                         isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
                       }`}>{user.name}</p>
@@ -225,23 +237,66 @@ const Dashboard = ({ setIsAuthenticated }) => {
                   </button>
                   <button
                     onClick={handleLogout}
-                    className={`text-white px-4 py-2 rounded-full font-medium shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 ${
+                    className={`text-white px-3 sm:px-4 py-2 rounded-full font-medium shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 text-sm ${
                       isToggled 
                         ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/90' 
                         : 'bg-[#8FABD4] hover:bg-[#8FABD4]/90'
                     }`}
                   >
-                    Logout
+                    <span className="hidden sm:inline">Logout</span>
+                    <span className="sm:hidden">Exit</span>
                   </button>
                 </div>
               )}
             </div>
           </div>
         </div>
+        
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className={`md:hidden border-t transition-all duration-300 ${
+            isToggled 
+              ? 'bg-[#000000]/90 border-[#4A70A9]/30' 
+              : 'bg-[#EFECE3]/80 border-[#8FABD4]/20'
+          }`}>
+            <div className="px-4 py-4 space-y-4">
+              <button 
+                onClick={() => { navigate('/features'); setIsMobileMenuOpen(false); }}
+                className={`block w-full text-left font-medium transition-colors ${
+                  isToggled 
+                    ? 'text-[#8FABD4] hover:text-[#4A70A9]' 
+                    : 'text-[#4A70A9] hover:text-[#8FABD4]'
+                }`}
+              >
+                Features
+              </button>
+              <button 
+                onClick={() => { navigate('/about'); setIsMobileMenuOpen(false); }}
+                className={`block w-full text-left font-medium transition-colors ${
+                  isToggled 
+                    ? 'text-[#8FABD4] hover:text-[#4A70A9]' 
+                    : 'text-[#4A70A9] hover:text-[#8FABD4]'
+                }`}
+              >
+                About
+              </button>
+              <button 
+                onClick={() => { navigate('/contact'); setIsMobileMenuOpen(false); }}
+                className={`block w-full text-left font-medium transition-colors ${
+                  isToggled 
+                    ? 'text-[#8FABD4] hover:text-[#4A70A9]' 
+                    : 'text-[#4A70A9] hover:text-[#8FABD4]'
+                }`}
+              >
+                Contact
+              </button>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
         {/* Hero Section */}
         <div className="text-center mb-12">
           <div className="flex justify-center mb-6">
@@ -259,12 +314,12 @@ const Dashboard = ({ setIsAuthenticated }) => {
               </div>
             )}
           </div>
-          <h2 className={`text-3xl sm:text-4xl font-bold tracking-tight mb-4 transition-all duration-500 ${
+          <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-4 transition-all duration-500 ${
             isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
           }`}>
             {isNewUser ? 'Welcome' : 'Welcome back'}, {user?.name || 'Friend'}!
           </h2>
-          <p className={`text-lg max-w-2xl mx-auto mb-8 transition-all duration-500 ${
+          <p className={`text-base sm:text-lg max-w-2xl mx-auto mb-6 sm:mb-8 transition-all duration-500 ${
             isToggled ? 'text-[#8FABD4]/80' : 'text-[#000000]/80'
           }`}>
             Ready to continue your wellness journey? Let's make today amazing!
@@ -272,10 +327,10 @@ const Dashboard = ({ setIsAuthenticated }) => {
         </div>
 
         {/* Feature Cards */}
-        <h3 className={`text-2xl font-bold mb-8 text-center ${
+        <h3 className={`text-xl sm:text-2xl font-bold mb-6 sm:mb-8 text-center ${
           isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
         }`}>Your Wellness Tools</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {features.map((feature, index) => {
             const featureImages = {
               'Mood Tracker': './photo3.png',
@@ -311,11 +366,11 @@ const Dashboard = ({ setIsAuthenticated }) => {
                   </div>
                 </div>
                 
-                <div className="p-6">
-                  <h3 className={`text-xl font-bold tracking-tight mb-3 ${
+                <div className="p-4 sm:p-6">
+                  <h3 className={`text-lg sm:text-xl font-bold tracking-tight mb-2 sm:mb-3 ${
                     isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
                   }`}>{feature.title}</h3>
-                  <p className={`text-sm leading-relaxed mb-4 ${
+                  <p className={`text-sm leading-relaxed mb-3 sm:mb-4 ${
                     isToggled ? 'text-[#8FABD4]/80' : 'text-[#000000]/80'
                   }`}>{feature.description}</p>
                   <button 
@@ -341,10 +396,10 @@ const Dashboard = ({ setIsAuthenticated }) => {
         </div>
 
         {/* Recent Activity */}
-        <div className={`mt-12 p-6 rounded-2xl shadow-lg ${
+        <div className={`mt-8 sm:mt-12 p-4 sm:p-6 rounded-2xl shadow-lg ${
           isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
         }`}>
-          <h3 className={`text-xl font-bold mb-6 ${
+          <h3 className={`text-lg sm:text-xl font-bold mb-4 sm:mb-6 ${
             isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
           }`}>Recent Activity</h3>
           <div className="space-y-4">
@@ -408,7 +463,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mt-8 sm:mt-12">
           <div className={`p-6 rounded-2xl shadow-lg transition-all duration-300 ${
             isToggled ? 'bg-[#000000]/60' : 'bg-white/80'
           }`}>

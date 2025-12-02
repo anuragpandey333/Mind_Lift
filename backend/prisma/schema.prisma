@@ -16,4 +16,94 @@ model User {
   role      String   @default("student")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  moodEntries MoodEntry[]
+  fitnessProfile FitnessProfile?
+  workouts Workout[]
+  dietPlans DietPlan[]
+  tasks Task[]
+}
+
+model MoodEntry {
+  id               String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String   @db.ObjectId
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mood             String
+  moodLabel        String
+  moodEmoji        String
+  stressLevel      Int
+  trigger          String?
+  note             String?
+  sleepQuality     Int
+  energyLevel      Int
+  socialConnection Int
+  physicalActivity String?
+  mealPattern      String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model FitnessProfile {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @unique @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weight      Float?
+  height      Float?
+  age         Int?
+  selectedDay String?  @default("Today")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Workout {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  duration    Int
+  calories    Int
+  type        String
+  date        String?
+  completed   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model DietPlan {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date        String
+  waterIntake Int      @default(0)
+  meals       Meal[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Meal {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  dietPlanId  String   @db.ObjectId
+  dietPlan    DietPlan @relation(fields: [dietPlanId], references: [id], onDelete: Cascade)
+  name        String
+  calories    Int
+  protein     Int
+  carbs       Int
+  fat         Int
+  type        String
+  consumed    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Task {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  priority    String   @default("medium")
+  category    String   @default("personal")
+  dueDate     DateTime?
+  completed   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

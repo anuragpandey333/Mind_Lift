@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 
 const Scheduler = () => {
   const navigate = useNavigate()
@@ -10,11 +11,21 @@ const Scheduler = () => {
   const [taskPriority, setTaskPriority] = useState('medium')
 
   useEffect(() => {
-    const theme = localStorage.getItem('theme')
-    const savedTasks = JSON.parse(localStorage.getItem('tasks') || '[]')
-    setIsToggled(theme === 'dark')
-    setTasks(savedTasks)
+    fetchTasks()
   }, [])
+
+  const fetchTasks = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.get('http://localhost:5001/api/tasks', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setTasks(response.data || [])
+    } catch (error) {
+      console.error('Error fetching tasks:', error)
+      setTasks([])
+    }
+  }
 
   const toggleTheme = () => {
     const newTheme = !isToggled
@@ -22,36 +33,51 @@ const Scheduler = () => {
     localStorage.setItem('theme', newTheme ? 'dark' : 'light')
   }
 
-  const addTask = () => {
+  const addTask = async () => {
     if (!newTask.trim()) return
     
-    const task = {
-      id: Date.now(),
-      text: newTask,
-      date: selectedDate,
-      priority: taskPriority,
-      completed: false,
-      createdAt: new Date().toISOString()
+    try {
+      const token = localStorage.getItem('token')
+      await axios.post('http://localhost:5001/api/tasks', {
+        title: newTask,
+        priority: taskPriority,
+        dueDate: selectedDate,
+        category: 'personal'
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setNewTask('')
+      fetchTasks()
+    } catch (error) {
+      console.error('Error adding task:', error)
     }
-    
-    const updatedTasks = [...tasks, task]
-    setTasks(updatedTasks)
-    localStorage.setItem('tasks', JSON.stringify(updatedTasks))
-    setNewTask('')
   }
 
-  const toggleTask = (id) => {
-    const updatedTasks = tasks.map(task =>
-      task.id === id ? { ...task, completed: !task.completed } : task
-    )
-    setTasks(updatedTasks)
-    localStorage.setItem('tasks', JSON.stringify(updatedTasks))
+  const toggleTask = async (id) => {
+    try {
+      const task = tasks.find(t => t.id === id)
+      const token = localStorage.getItem('token')
+      await axios.patch(`http://localhost:5001/api/tasks/${id}`, {
+        completed: !task.completed
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      fetchTasks()
+    } catch (error) {
+      console.error('Error toggling task:', error)
+    }
   }
 
-  const deleteTask = (id) => {
-    const updatedTasks = tasks.filter(task => task.id !== id)
-    setTasks(updatedTasks)
-    localStorage.setItem('tasks', JSON.stringify(updatedTasks))
+  const deleteTask = async (id) => {
+    try {
+      const token = localStorage.getItem('token')
+      await axios.delete(`http://localhost:5001/api/tasks/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      fetchTasks()
+    } catch (error) {
+      console.error('Error deleting task:', error)
+    }
   }
 
   const clearAllTasks = () => {
@@ -61,8 +87,8 @@ const Scheduler = () => {
     }
   }
 
-  const todayTasks = tasks.filter(task => task.date === new Date().toISOString().split('T')[0])
-  const upcomingTasks = tasks.filter(task => task.date > new Date().toISOString().split('T')[0])
+  const todayTasks = tasks.filter(task => task.dueDate === new Date().toISOString().split('T')[0])
+  const upcomingTasks = tasks.filter(task => task.dueDate > new Date().toISOString().split('T')[0])
   const completedTasks = tasks.filter(task => task.completed)
 
   const getPriorityColor = (priority) => {
@@ -278,7 +304,7 @@ const Scheduler = () => {
                     <div className="flex-1">
                       <p className={`${task.completed ? 'line-through opacity-60' : ''} ${
                         isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
-                      }`}>{task.text}</p>
+                      }`}>{task.title}</p>
                       <p className={`text-xs ${getPriorityColor(task.priority)}`}>
                         {task.priority.toUpperCase()} PRIORITY
                       </p>
@@ -321,13 +347,13 @@ const Scheduler = () => {
                     <div className="flex-1">
                       <p className={`${task.completed ? 'line-through opacity-60' : ''} ${
                         isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
-                      }`}>{task.text}</p>
+                      }`}>{task.title}</p>
                       <div className="flex items-center space-x-2 text-xs">
                         <span className={getPriorityColor(task.priority)}>
                           {task.priority.toUpperCase()}
                         </span>
                         <span className={isToggled ? 'text-[#8FABD4]/60' : 'text-[#000000]/60'}>
-                          {task.date}
+                          {task.dueDate}
                         </span>
                       </div>
                     </div>

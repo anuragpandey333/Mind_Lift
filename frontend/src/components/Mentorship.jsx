@@ -253,7 +253,7 @@ const Mentorship = () => {
           ? 'bg-[#000000]/90 border-[#4A70A9]/30' 
           : 'bg-[#EFECE3]/80 border-[#8FABD4]/20'
       }`}>
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button 
@@ -266,7 +266,7 @@ const Mentorship = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <h1 className={`text-2xl font-bold ${
+              <h1 className={`text-xl sm:text-2xl font-bold ${
                 isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
               }`}>B.Tech Mentorship Hub</h1>
             </div>
@@ -302,12 +302,12 @@ const Mentorship = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6">
         {/* Navigation Tabs */}
         <div className={`rounded-2xl shadow-lg p-2 mb-6 ${
           isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
         }`}>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <button
               onClick={() => setActiveTab('mentors')}
               className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
@@ -384,7 +384,7 @@ const Mentorship = () => {
             </div>
 
             {/* Mentors Grid */}
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {filteredMentors.map(mentor => (
                 <div key={mentor.id} className={`rounded-2xl shadow-lg hover:shadow-xl transition-all overflow-hidden ${
                   isToggled ? 'bg-[#000000]/60' : 'bg-white/90'

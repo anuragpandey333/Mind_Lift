@@ -36,21 +36,21 @@ const Navbar = ({ isToggled, toggleTheme, isAuthenticated }) => {
           </div>
           
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#about" className={`font-semibold text-sm tracking-wide transition-all duration-300 hover:scale-105 ${
+            <button onClick={() => navigate('/about')} className={`font-semibold text-sm tracking-wide transition-all duration-300 hover:scale-105 ${
               isToggled 
                 ? 'text-[#8FABD4] hover:text-[#4A70A9]' 
                 : 'text-[#4A70A9] hover:text-[#8FABD4]'
-            }`}>About</a>
-            <a href="#features" className={`font-semibold text-sm tracking-wide transition-all duration-300 hover:scale-105 ${
+            }`}>About</button>
+            <button onClick={() => navigate('/features')} className={`font-semibold text-sm tracking-wide transition-all duration-300 hover:scale-105 ${
               isToggled 
                 ? 'text-[#8FABD4] hover:text-[#4A70A9]' 
                 : 'text-[#4A70A9] hover:text-[#8FABD4]'
-            }`}>Features</a>
-            <a href="#testimonials" className={`font-semibold text-sm tracking-wide transition-all duration-300 hover:scale-105 ${
+            }`}>Features</button>
+            <button onClick={() => navigate('/contact')} className={`font-semibold text-sm tracking-wide transition-all duration-300 hover:scale-105 ${
               isToggled 
                 ? 'text-[#8FABD4] hover:text-[#4A70A9]' 
                 : 'text-[#4A70A9] hover:text-[#8FABD4]'
-            }`}>Testimonials</a>
+            }`}>Contact</button>
           </div>
           
           <button
@@ -113,21 +113,21 @@ const Navbar = ({ isToggled, toggleTheme, isAuthenticated }) => {
             : 'bg-white/90 border-gray-200'
         }`}>
           <div className="px-6 py-4 space-y-4">
-            <a href="#about" onClick={() => setIsMobileMenuOpen(false)} className={`block font-medium transition-colors ${
+            <button onClick={() => { navigate('/about'); setIsMobileMenuOpen(false); }} className={`block font-medium transition-colors ${
               isToggled 
                 ? 'text-[#FFF2EF] hover:text-[#FFDBB6]' 
                 : 'text-gray-600 hover:text-[#687FE5]'
-            }`}>About</a>
-            <a href="#features" onClick={() => setIsMobileMenuOpen(false)} className={`block font-medium transition-colors ${
+            }`}>About</button>
+            <button onClick={() => { navigate('/features'); setIsMobileMenuOpen(false); }} className={`block font-medium transition-colors ${
               isToggled 
                 ? 'text-[#FFF2EF] hover:text-[#FFDBB6]' 
                 : 'text-gray-600 hover:text-[#687FE5]'
-            }`}>Features</a>
-            <a href="#testimonials" onClick={() => setIsMobileMenuOpen(false)} className={`block font-medium transition-colors ${
+            }`}>Features</button>
+            <button onClick={() => { navigate('/contact'); setIsMobileMenuOpen(false); }} className={`block font-medium transition-colors ${
               isToggled 
                 ? 'text-[#FFF2EF] hover:text-[#FFDBB6]' 
                 : 'text-gray-600 hover:text-[#687FE5]'
-            }`}>Testimonials</a>
+            }`}>Contact</button>
             
             <div className="pt-4 space-y-3">
               {isAuthenticated ? (

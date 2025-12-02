@@ -1,23 +1,67 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 
 const FitnessTracker = () => {
   const navigate = useNavigate()
   const [isToggled, setIsToggled] = useState(false)
   const [activeTab, setActiveTab] = useState('profile')
 
-  const [userProfile, setUserProfile] = useState({ weight: '', height: '', age: '', selectedDay: 'Today' })
+  const [userProfile, setUserProfile] = useState({ weight: '', height: '', age: '' })
   const [workouts, setWorkouts] = useState([])
-  const [weeklyProgress, setWeeklyProgress] = useState({
-    Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0
-  })
   const [selectedWorkout, setSelectedWorkout] = useState(null)
   const [currentDay, setCurrentDay] = useState(userProfile.selectedDay === 'Today' ? new Date().toLocaleDateString('en-US', { weekday: 'short' }) : userProfile.selectedDay)
+  const [dietPlan, setDietPlan] = useState(null)
+  const [waterIntake, setWaterIntake] = useState(0)
 
   useEffect(() => {
-    const theme = localStorage.getItem('theme')
-    setIsToggled(theme === 'dark')
+    fetchFitnessProfile()
+    fetchWorkouts()
+    fetchDietPlan()
   }, [])
+
+  const fetchFitnessProfile = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.get('http://localhost:5001/api/fitness/profile', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (response.data) {
+        setUserProfile(response.data)
+      }
+    } catch (error) {
+      console.error('Error fetching fitness profile:', error)
+    }
+  }
+
+  const fetchWorkouts = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.get('http://localhost:5001/api/fitness/workouts', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setWorkouts(response.data)
+    } catch (error) {
+      console.error('Error fetching workouts:', error)
+    }
+  }
+
+  const saveProfile = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      await axios.post('http://localhost:5001/api/fitness/profile', {
+        weight: parseFloat(userProfile.weight),
+        height: parseFloat(userProfile.height),
+        age: parseInt(userProfile.age),
+        selectedDay: userProfile.selectedDay || 'Today'
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      fetchFitnessProfile()
+    } catch (error) {
+      console.error('Error saving profile:', error)
+    }
+  }
 
   const getPersonalizedWorkouts = () => {
     if (!userProfile.weight || !userProfile.height) return []
@@ -79,33 +123,133 @@ const FitnessTracker = () => {
     }
   }
 
-  const addWorkout = (workout) => {
-    const newWorkout = { ...workout, id: Date.now(), completed: false }
+  const addWorkout = async (workout) => {
+    try {
+      const token = localStorage.getItem('token')
+      await axios.post('http://localhost:5001/api/fitness/workouts', workout, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      fetchWorkouts()
+    } catch (error) {
+      console.error('Error adding workout:', error)
+    }
+  }
+
+  const addToToday = async (workout) => {
+    const newWorkout = {
+      ...workout,
+      date: new Date().toISOString().split('T')[0],
+      completed: false,
+      id: Date.now() // temporary ID
+    }
+    
+    // Add to state immediately
     setWorkouts(prev => [...prev, newWorkout])
+    setActiveTab('dashboard')
+    
+    // Save to database
+    await addWorkout(newWorkout)
   }
 
-  const toggleWorkout = (id) => {
-    setWorkouts(prev => prev.map(w => w.id === id ? { ...w, completed: !w.completed } : w))
-    updateWeeklyProgress()
+  const submitProfile = async () => {
+    if (!userProfile.weight || !userProfile.height || !userProfile.age) {
+      alert('Please fill in all profile fields')
+      return
+    }
+    await saveProfile()
+    alert('Profile saved successfully!')
   }
 
-  const removeWorkout = (id) => {
-    setWorkouts(prev => prev.filter(w => w.id !== id))
-    updateWeeklyProgress()
+  const toggleWorkout = async (id) => {
+    try {
+      const workout = workouts.find(w => w.id === id)
+      
+      // Update state immediately
+      setWorkouts(prev => prev.map(w => 
+        w.id === id ? { ...w, completed: !w.completed } : w
+      ))
+      
+      const token = localStorage.getItem('token')
+      await axios.patch(`http://localhost:5001/api/fitness/workouts/${id}`, {
+        completed: !workout.completed
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      
+      // If workout was just completed, show progress tab
+      if (!workout.completed) {
+        setTimeout(() => setActiveTab('progress'), 500)
+      }
+      
+      fetchWorkouts()
+    } catch (error) {
+      console.error('Error toggling workout:', error)
+    }
   }
 
-  const updateWeeklyProgress = () => {
+  const removeWorkout = async (id) => {
+    try {
+      const token = localStorage.getItem('token')
+      await axios.delete(`http://localhost:5001/api/fitness/workouts/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      fetchWorkouts()
+    } catch (error) {
+      console.error('Error removing workout:', error)
+    }
+  }
+
+  const getWeeklyProgress = () => {
+    const today = new Date().toLocaleDateString('en-US', { weekday: 'short' })
     const completedWorkouts = workouts.filter(w => w.completed)
     const totalMinutes = completedWorkouts.reduce((sum, w) => sum + w.duration, 0)
-    const progressPercent = Math.min((totalMinutes / 60) * 100, 100)
-    
-    setWeeklyProgress(prev => ({
-      ...prev,
-      [currentDay]: progressPercent
-    }))
+    return Math.min((totalMinutes / 60) * 100, 100)
   }
 
   const totalCalories = workouts.filter(w => w.completed).reduce((sum, w) => sum + w.calories, 0)
+
+  const fetchDietPlan = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.get('http://localhost:5001/api/diet/plan', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (response.data) {
+        setDietPlan(response.data)
+        setWaterIntake(response.data.waterIntake || 0)
+      }
+    } catch (error) {
+      console.error('Error fetching diet plan:', error)
+    }
+  }
+
+  const updateWaterIntake = async (amount) => {
+    const newAmount = Math.max(0, waterIntake + amount)
+    setWaterIntake(newAmount)
+    try {
+      const token = localStorage.getItem('token')
+      await axios.post('http://localhost:5001/api/diet/plan', {
+        waterIntake: newAmount
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      fetchDietPlan()
+    } catch (error) {
+      console.error('Error updating water intake:', error)
+    }
+  }
+
+  const addMeal = async (meal) => {
+    try {
+      const token = localStorage.getItem('token')
+      await axios.post('http://localhost:5001/api/diet/meals', meal, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      fetchDietPlan()
+    } catch (error) {
+      console.error('Error adding meal:', error)
+    }
+  }
 
 
   return (
@@ -120,7 +264,7 @@ const FitnessTracker = () => {
           ? 'bg-[#000000]/90 border-[#4A70A9]/30' 
           : 'bg-[#EFECE3]/80 border-[#8FABD4]/20'
       }`}>
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button 
@@ -133,7 +277,7 @@ const FitnessTracker = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <h1 className={`text-2xl font-bold ${
+              <h1 className={`text-xl sm:text-2xl font-bold ${
                 isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
               }`}>Fitness Tracker</h1>
             </div>
@@ -141,14 +285,14 @@ const FitnessTracker = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Tab Navigation */}
-        <div className="flex space-x-1 mb-8">
-          {['profile', 'dashboard', 'workouts', 'progress'].map((tab) => (
+        <div className="flex flex-wrap gap-2 mb-6 sm:mb-8">
+          {['profile', 'dashboard', 'workouts', 'diet', 'progress'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 capitalize ${
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base transition-all duration-300 capitalize ${
                 activeTab === tab
                   ? isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#8FABD4] text-white'
                   : isToggled ? 'text-[#8FABD4] hover:bg-[#4A70A9]/20' : 'text-[#4A70A9] hover:bg-[#8FABD4]/20'
@@ -168,15 +312,16 @@ const FitnessTracker = () => {
               <h3 className={`text-xl font-bold mb-6 ${
                 isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
               }`}>Your Fitness Profile</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                 <div>
                   <label className={`block text-sm font-medium mb-2 ${
                     isToggled ? 'text-[#8FABD4]' : 'text-gray-700'
                   }`}>Weight (kg)</label>
                   <input
                     type="number"
-                    value={userProfile.weight}
+                    value={userProfile.weight || ''}
                     onChange={(e) => setUserProfile(prev => ({ ...prev, weight: e.target.value }))}
+                    onBlur={saveProfile}
                     className={`w-full p-3 rounded-lg border transition-all duration-300 ${
                       isToggled 
                         ? 'bg-[#000000]/40 border-[#8FABD4]/30 text-[#8FABD4] focus:border-[#4A70A9]'
@@ -191,8 +336,9 @@ const FitnessTracker = () => {
                   }`}>Height (cm)</label>
                   <input
                     type="number"
-                    value={userProfile.height}
+                    value={userProfile.height || ''}
                     onChange={(e) => setUserProfile(prev => ({ ...prev, height: e.target.value }))}
+                    onBlur={saveProfile}
                     className={`w-full p-3 rounded-lg border transition-all duration-300 ${
                       isToggled 
                         ? 'bg-[#000000]/40 border-[#8FABD4]/30 text-[#8FABD4] focus:border-[#4A70A9]'
@@ -207,8 +353,9 @@ const FitnessTracker = () => {
                   }`}>Age</label>
                   <input
                     type="number"
-                    value={userProfile.age}
+                    value={userProfile.age || ''}
                     onChange={(e) => setUserProfile(prev => ({ ...prev, age: e.target.value }))}
+                    onBlur={saveProfile}
                     className={`w-full p-3 rounded-lg border transition-all duration-300 ${
                       isToggled 
                         ? 'bg-[#000000]/40 border-[#8FABD4]/30 text-[#8FABD4] focus:border-[#4A70A9]'
@@ -247,6 +394,19 @@ const FitnessTracker = () => {
                 </select>
               </div>
               
+              <div className="mt-6">
+                <button
+                  onClick={submitProfile}
+                  className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 ${
+                    isToggled 
+                      ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/80 text-white' 
+                      : 'bg-[#8FABD4] hover:bg-[#8FABD4]/80 text-white'
+                  }`}
+                >
+                  Submit Profile
+                </button>
+              </div>
+              
               {userProfile.weight && userProfile.height && (
                 <div className="mt-6 p-4 rounded-lg bg-gradient-to-r from-blue-50 to-green-50">
                   <div className="flex items-center justify-between">
@@ -279,7 +439,7 @@ const FitnessTracker = () => {
         {activeTab === 'dashboard' && (
           <div className="space-y-8">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               {/* Calories Burned */}
               <div className={`p-6 rounded-2xl shadow-lg ${
                 isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
@@ -329,7 +489,7 @@ const FitnessTracker = () => {
                 }`}>Today's Workouts ({currentDay})</h3>
                 <div className={`text-sm ${
                   isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
-                }`}>Progress: {Math.round(weeklyProgress[currentDay])}%</div>
+                }`}>Progress: {Math.round(getWeeklyProgress())}%</div>
               </div>
               <div className="space-y-3">
                 {workouts.map((workout) => (
@@ -448,7 +608,7 @@ const FitnessTracker = () => {
                 <p className={`text-sm mb-6 ${
                   isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
                 }`}>Based on your BMI: {(userProfile.weight / ((userProfile.height / 100) ** 2)).toFixed(1)}</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {getPersonalizedWorkouts().map((workout, index) => (
                     <div key={index} className={`p-6 rounded-2xl shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer ${
                       isToggled ? 'bg-[#000000]/60 hover:bg-[#000000]/80' : 'bg-white/90 hover:bg-white'
@@ -474,7 +634,7 @@ const FitnessTracker = () => {
                           }`}>{workout.type}</span>
                         </div>
                         <button 
-                          onClick={() => addWorkout(workout)}
+                          onClick={() => addToToday(workout)}
                           className={`w-full py-2 rounded-lg font-medium transition-all duration-300 ${
                             isToggled 
                               ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/80 text-white' 
@@ -483,6 +643,126 @@ const FitnessTracker = () => {
                         >
                           Add to Today
                         </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Diet Tab */}
+        {activeTab === 'diet' && (
+          <div className="space-y-8">
+            {/* Water Intake */}
+            <div className={`p-6 rounded-2xl shadow-lg ${
+              isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
+            }`}>
+              <h3 className={`text-xl font-bold mb-4 ${
+                isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
+              }`}>Water Intake</h3>
+              <div className="flex items-center justify-between mb-4">
+                <span className={`text-2xl font-bold ${
+                  isToggled ? 'text-[#8FABD4]' : 'text-gray-800'
+                }`}>{waterIntake} glasses</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => updateWaterIntake(-1)}
+                    className={`px-3 py-1 rounded ${
+                      isToggled ? 'bg-red-600 text-white' : 'bg-red-500 text-white'
+                    }`}
+                  >-</button>
+                  <button
+                    onClick={() => updateWaterIntake(1)}
+                    className={`px-3 py-1 rounded ${
+                      isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#8FABD4] text-white'
+                    }`}
+                  >+</button>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Meals */}
+            <div className={`p-6 rounded-2xl shadow-lg ${
+              isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
+            }`}>
+              <h3 className={`text-xl font-bold mb-4 ${
+                isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
+              }`}>Quick Meals</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[
+                  { name: 'Oatmeal', calories: 150, protein: 5, carbs: 27, fat: 3, type: 'breakfast' },
+                  { name: 'Grilled Chicken', calories: 250, protein: 30, carbs: 0, fat: 14, type: 'lunch' },
+                  { name: 'Greek Yogurt', calories: 100, protein: 17, carbs: 6, fat: 0, type: 'snack' },
+                  { name: 'Salmon', calories: 200, protein: 22, carbs: 0, fat: 12, type: 'dinner' },
+                  { name: 'Apple', calories: 80, protein: 0, carbs: 22, fat: 0, type: 'snack' },
+                  { name: 'Brown Rice', calories: 110, protein: 3, carbs: 23, fat: 1, type: 'side' }
+                ].map((meal, index) => (
+                  <div key={index} className={`p-4 rounded-lg border ${
+                    isToggled ? 'bg-[#8FABD4]/10 border-[#8FABD4]/30' : 'bg-gray-50 border-gray-200'
+                  }`}>
+                    <h4 className={`font-semibold mb-2 ${
+                      isToggled ? 'text-[#8FABD4]' : 'text-gray-800'
+                    }`}>{meal.name}</h4>
+                    <p className={`text-sm mb-2 ${
+                      isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
+                    }`}>{meal.calories} cal</p>
+                    <button
+                      onClick={() => addMeal(meal)}
+                      className={`w-full py-2 rounded text-sm ${
+                        isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#8FABD4] text-white'
+                      }`}
+                    >
+                      Add to Today
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Today's Meals */}
+            {dietPlan && dietPlan.meals && dietPlan.meals.length > 0 && (
+              <div className={`p-6 rounded-2xl shadow-lg ${
+                isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
+              }`}>
+                <h3 className={`text-xl font-bold mb-4 ${
+                  isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
+                }`}>Today's Meals</h3>
+                <div className="space-y-3">
+                  {dietPlan.meals.map((meal) => (
+                    <div key={meal.id} className={`p-4 rounded-lg border ${
+                      meal.consumed
+                        ? isToggled ? 'bg-[#4A70A9]/20 border-green-500' : 'bg-green-50 border-green-200'
+                        : isToggled ? 'bg-[#8FABD4]/10 border-[#8FABD4]/30' : 'bg-gray-50 border-gray-200'
+                    }`}>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className={`font-semibold ${
+                            isToggled ? 'text-[#8FABD4]' : 'text-gray-800'
+                          }`}>{meal.name}</h4>
+                          <p className={`text-sm ${
+                            isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
+                          }`}>{meal.calories} cal • P: {meal.protein}g • C: {meal.carbs}g • F: {meal.fat}g</p>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={meal.consumed}
+                          onChange={async (e) => {
+                            try {
+                              const token = localStorage.getItem('token')
+                              await axios.patch(`http://localhost:5001/api/diet/meals/${meal.id}`, {
+                                consumed: e.target.checked
+                              }, {
+                                headers: { Authorization: `Bearer ${token}` }
+                              })
+                              fetchDietPlan()
+                            } catch (error) {
+                              console.error('Error updating meal:', error)
+                            }
+                          }}
+                          className="w-5 h-5"
+                        />
                       </div>
                     </div>
                   ))}
@@ -503,8 +783,8 @@ const FitnessTracker = () => {
               }`}>Weekly Progress</h3>
               <div className="grid grid-cols-7 gap-4">
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => {
-                  const progress = weeklyProgress[day]
-                  const isToday = currentDay === day
+                  const progress = day === new Date().toLocaleDateString('en-US', { weekday: 'short' }) ? getWeeklyProgress() : 0
+                  const isToday = new Date().toLocaleDateString('en-US', { weekday: 'short' }) === day
                   return (
                     <div key={day} className="text-center">
                       <p className={`text-sm font-medium mb-2 ${
@@ -541,7 +821,7 @@ const FitnessTracker = () => {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
                   { name: 'First Workout', icon: '🏆', earned: workouts.some(w => w.completed) },
-                  { name: '7 Day Streak', icon: '🔥', earned: Object.values(weeklyProgress).filter(p => p > 0).length >= 7 },
+                  { name: '7 Day Streak', icon: '🔥', earned: workouts.filter(w => w.completed).length >= 7 },
                   { name: 'Workout Warrior', icon: '👟', earned: workouts.length >= 5 },
                   { name: 'Calorie Crusher', icon: '💪', earned: totalCalories >= 500 }
                 ].map((badge, index) => (

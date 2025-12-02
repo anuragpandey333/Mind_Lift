@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 
 const DietPlanner = () => {
   const navigate = useNavigate()
@@ -9,11 +10,32 @@ const DietPlanner = () => {
   const [waterIntake, setWaterIntake] = useState(0)
   const [dailyGoal] = useState(8)
   const [myPlan, setMyPlan] = useState({ breakfast: null, lunch: null, dinner: null })
+  const [dietPlan, setDietPlan] = useState(null)
 
   useEffect(() => {
-    const theme = localStorage.getItem('theme')
-    setIsToggled(theme === 'dark')
+    fetchDietPlan()
   }, [])
+
+  const fetchDietPlan = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.get('http://localhost:5001/api/diet/plan', {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (response.data) {
+        setDietPlan(response.data)
+        setWaterIntake(response.data.waterIntake || 0)
+        // Convert meals to myPlan format
+        const planMeals = { breakfast: null, lunch: null, dinner: null }
+        response.data.meals?.forEach(meal => {
+          planMeals[meal.type] = meal
+        })
+        setMyPlan(planMeals)
+      }
+    } catch (error) {
+      console.error('Error fetching diet plan:', error)
+    }
+  }
 
   const mealPlans = {
     breakfast: [
@@ -58,24 +80,69 @@ const DietPlanner = () => {
     { category: 'Mood Stabilizer', foods: ['Yogurt', 'Oats', 'Turkey', 'Beans'], color: 'bg-purple-100' }
   ]
 
-  const addWater = () => {
+  const addWater = async () => {
     if (waterIntake < dailyGoal) {
-      setWaterIntake(prev => prev + 1)
+      const newAmount = waterIntake + 1
+      setWaterIntake(newAmount)
+      await updateWaterIntake(newAmount)
     }
   }
 
-  const removeWater = () => {
+  const removeWater = async () => {
     if (waterIntake > 0) {
-      setWaterIntake(prev => prev - 1)
+      const newAmount = waterIntake - 1
+      setWaterIntake(newAmount)
+      await updateWaterIntake(newAmount)
     }
   }
 
-  const addToPlan = (meal, mealType) => {
-    setMyPlan(prev => ({ ...prev, [mealType]: meal }))
+  const updateWaterIntake = async (amount) => {
+    try {
+      const token = localStorage.getItem('token')
+      await axios.post('http://localhost:5001/api/diet/plan', {
+        waterIntake: amount
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+    } catch (error) {
+      console.error('Error updating water intake:', error)
+    }
   }
 
-  const removeFromPlan = (mealType) => {
-    setMyPlan(prev => ({ ...prev, [mealType]: null }))
+  const addToPlan = async (meal, mealType) => {
+    try {
+      const token = localStorage.getItem('token')
+      await axios.post('http://localhost:5001/api/diet/meals', {
+        name: meal.name,
+        calories: meal.calories,
+        protein: meal.protein,
+        carbs: meal.carbs,
+        fat: meal.fat,
+        type: mealType
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setMyPlan(prev => ({ ...prev, [mealType]: meal }))
+      fetchDietPlan()
+    } catch (error) {
+      console.error('Error adding meal to plan:', error)
+    }
+  }
+
+  const removeFromPlan = async (mealType) => {
+    try {
+      const mealToRemove = dietPlan?.meals?.find(meal => meal.type === mealType)
+      if (mealToRemove) {
+        const token = localStorage.getItem('token')
+        await axios.delete(`http://localhost:5001/api/diet/meals/${mealToRemove.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      }
+      setMyPlan(prev => ({ ...prev, [mealType]: null }))
+      fetchDietPlan()
+    } catch (error) {
+      console.error('Error removing meal from plan:', error)
+    }
   }
 
   return (
@@ -90,7 +157,7 @@ const DietPlanner = () => {
           ? 'bg-[#000000]/90 border-[#4A70A9]/30' 
           : 'bg-[#EFECE3]/80 border-[#8FABD4]/20'
       }`}>
-        <div className="max-w-7xl mx-auto px-6 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button 
@@ -103,7 +170,7 @@ const DietPlanner = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <h1 className={`text-2xl font-bold ${
+              <h1 className={`text-xl sm:text-2xl font-bold ${
                 isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
               }`}>Diet Planner</h1>
             </div>
@@ -111,14 +178,14 @@ const DietPlanner = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Tab Navigation */}
-        <div className="flex space-x-1 mb-8">
+        <div className="flex flex-wrap gap-2 mb-6 sm:mb-8">
           {['planner', 'nutrition', 'mood-foods'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base transition-all duration-300 ${
                 activeTab === tab
                   ? isToggled 
                     ? 'bg-[#4A70A9] text-white' 
@@ -143,7 +210,7 @@ const DietPlanner = () => {
               <h3 className={`text-xl font-bold mb-4 ${
                 isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
               }`}>My Daily Plan</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {['breakfast', 'lunch', 'dinner'].map((mealType) => (
                   <div key={mealType} className={`p-4 rounded-lg border-2 border-dashed ${
                     myPlan[mealType] 
@@ -238,12 +305,12 @@ const DietPlanner = () => {
             </div>
 
             {/* Meal Selection */}
-            <div className="flex space-x-4 mb-6">
+            <div className="flex flex-wrap gap-2 sm:gap-4 mb-6">
               {['breakfast', 'lunch', 'dinner'].map((meal) => (
                 <button
                   key={meal}
                   onClick={() => setSelectedMeal(meal)}
-                  className={`px-6 py-3 rounded-lg font-medium capitalize transition-all duration-300 ${
+                  className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base capitalize transition-all duration-300 ${
                     selectedMeal === meal
                       ? isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#8FABD4] text-white'
                       : isToggled ? 'text-[#8FABD4] hover:bg-[#4A70A9]/20' : 'text-[#4A70A9] hover:bg-[#8FABD4]/20'
@@ -255,11 +322,11 @@ const DietPlanner = () => {
             </div>
 
             {/* Meal Options */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {mealPlans[selectedMeal].map((meal, index) => (
                 <div
                   key={index}
-                  className={`p-6 rounded-2xl shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer ${
+                  className={`p-4 sm:p-6 rounded-2xl shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer ${
                     isToggled ? 'bg-[#000000]/60 hover:bg-[#000000]/80' : 'bg-white/90 hover:bg-white'
                   }`}
                 >
@@ -320,7 +387,7 @@ const DietPlanner = () => {
               <h3 className={`text-xl font-bold mb-6 ${
                 isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
               }`}>Daily Nutrition Goals</h3>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
                 {[
                   { label: 'Calories', current: 1650, goal: 2000, unit: 'kcal', color: 'bg-red-500' },
                   { label: 'Protein', current: 85, goal: 120, unit: 'g', color: 'bg-blue-500' },
@@ -386,11 +453,11 @@ const DietPlanner = () => {
               }`}>Discover foods that can naturally boost your mood and mental clarity</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               {moodFoods.map((category, index) => (
                 <div
                   key={index}
-                  className={`p-6 rounded-2xl shadow-lg transition-all duration-300 hover:scale-105 ${
+                  className={`p-4 sm:p-6 rounded-2xl shadow-lg transition-all duration-300 hover:scale-105 ${
                     isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
                   }`}
                 >

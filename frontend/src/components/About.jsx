@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Navbar from './Navbar';
 
 const About = () => {
   const navigate = useNavigate();
   const [isToggled, setIsToggled] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
     const theme = localStorage.getItem('theme');
+    setIsAuthenticated(!!token);
     setIsToggled(theme === 'dark');
   }, []);
 
@@ -22,63 +26,20 @@ const About = () => {
         ? 'bg-gradient-to-br from-[#000000] via-[#1a1a1a] to-[#333333]' 
         : 'bg-gradient-to-br from-[#EFECE3] via-[#f5f2e9] to-[#e8e5dc]'
     }`}>
-      {/* Navigation */}
-      <nav className={`backdrop-blur-md shadow-sm border-b transition-all duration-500 ${
-        isToggled 
-          ? 'bg-[#000000]/90 border-[#4A70A9]/30' 
-          : 'bg-[#EFECE3]/80 border-[#8FABD4]/20'
-      }`}>
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center space-x-3">
-              <button 
-                onClick={toggleTheme}
-                className={`flex items-center justify-center w-12 h-12 bg-gradient-to-br rounded-2xl shadow-lg transition-all duration-500 transform hover:scale-110 ${
-                  isToggled 
-                    ? 'from-[#4A70A9] to-[#8FABD4] rotate-180' 
-                    : 'from-[#8FABD4] to-[#4A70A9] rotate-0'
-                }`}
-              >
-                <svg className={`w-7 h-7 text-white transition-all duration-500 ${
-                  isToggled ? 'rotate-45 scale-110' : 'rotate-0 scale-100'
-                }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              </button>
-              <button 
-                onClick={() => navigate('/dashboard')}
-                className={`text-3xl font-semibold bg-clip-text text-transparent tracking-wider transition-all duration-500 hover:opacity-80 ${
-                  isToggled 
-                    ? 'bg-gradient-to-r from-[#8FABD4] via-[#4A70A9] to-[#8FABD4]' 
-                    : 'bg-gradient-to-r from-[#4A70A9] via-[#8FABD4] to-[#4A70A9]'
-                }`}
-              >
-                MindLift
-              </button>
-            </div>
-            
-            <button
-              onClick={() => navigate('/dashboard')}
-              className={`text-white px-6 py-2 rounded-full font-medium shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 ${
-                isToggled 
-                  ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/90' 
-                  : 'bg-[#8FABD4] hover:bg-[#8FABD4]/90'
-              }`}
-            >
-              Back to Dashboard
-            </button>
-          </div>
-        </div>
-      </nav>
+      <Navbar 
+        isToggled={isToggled} 
+        toggleTheme={toggleTheme} 
+        isAuthenticated={isAuthenticated} 
+      />
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto pt-24 sm:pt-32 pb-8 sm:pb-12 px-4 sm:px-6 lg:px-8">
         {/* Hero Section */}
         <div className="text-center mb-16">
-          <h1 className={`text-4xl sm:text-5xl font-bold mb-6 transition-all duration-500 ${
+          <h1 className={`text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 transition-all duration-500 ${
             isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
           }`}>About MindLift</h1>
-          <p className={`text-xl max-w-3xl mx-auto transition-all duration-500 ${
+          <p className={`text-lg sm:text-xl max-w-3xl mx-auto transition-all duration-500 ${
             isToggled ? 'text-[#8FABD4]/80' : 'text-[#000000]/80'
           }`}>
             Empowering students to achieve mental wellness and academic success through comprehensive support tools
