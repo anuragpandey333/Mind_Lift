@@ -23,7 +23,7 @@ const FitnessTracker = () => {
   const fetchFitnessProfile = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await axios.get('http://localhost:5001/api/fitness/profile', {
+      const response = await axios.get('https://mind-lift-nine.vercel.app/api/fitness/profile', {
         headers: { Authorization: `Bearer ${token}` }
       })
       if (response.data) {
@@ -37,7 +37,7 @@ const FitnessTracker = () => {
   const fetchWorkouts = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await axios.get('http://localhost:5001/api/fitness/workouts', {
+      const response = await axios.get('https://mind-lift-nine.vercel.app/api/fitness/workouts', {
         headers: { Authorization: `Bearer ${token}` }
       })
       setWorkouts(response.data)
@@ -49,7 +49,7 @@ const FitnessTracker = () => {
   const saveProfile = async () => {
     try {
       const token = localStorage.getItem('token')
-      await axios.post('http://localhost:5001/api/fitness/profile', {
+      await axios.post('https://mind-lift-nine.vercel.app/api/fitness/profile', {
         weight: parseFloat(userProfile.weight),
         height: parseFloat(userProfile.height),
         age: parseInt(userProfile.age),
@@ -126,7 +126,7 @@ const FitnessTracker = () => {
   const addWorkout = async (workout) => {
     try {
       const token = localStorage.getItem('token')
-      await axios.post('http://localhost:5001/api/fitness/workouts', workout, {
+      await axios.post('https://mind-lift-nine.vercel.app/api/fitness/workouts', workout, {
         headers: { Authorization: `Bearer ${token}` }
       })
       fetchWorkouts()
@@ -170,7 +170,7 @@ const FitnessTracker = () => {
       ))
       
       const token = localStorage.getItem('token')
-      await axios.patch(`http://localhost:5001/api/fitness/workouts/${id}`, {
+      await axios.patch(`https://mind-lift-nine.vercel.app/api/fitness/workouts/${id}`, {
         completed: !workout.completed
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -190,7 +190,7 @@ const FitnessTracker = () => {
   const removeWorkout = async (id) => {
     try {
       const token = localStorage.getItem('token')
-      await axios.delete(`http://localhost:5001/api/fitness/workouts/${id}`, {
+      await axios.delete(`https://mind-lift-nine.vercel.app/api/fitness/workouts/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       fetchWorkouts()
@@ -211,7 +211,7 @@ const FitnessTracker = () => {
   const fetchDietPlan = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await axios.get('http://localhost:5001/api/diet/plan', {
+      const response = await axios.get('https://mind-lift-nine.vercel.app/api/diet/plan', {
         headers: { Authorization: `Bearer ${token}` }
       })
       if (response.data) {
@@ -228,7 +228,7 @@ const FitnessTracker = () => {
     setWaterIntake(newAmount)
     try {
       const token = localStorage.getItem('token')
-      await axios.post('http://localhost:5001/api/diet/plan', {
+      await axios.post('https://mind-lift-nine.vercel.app/api/diet/plan', {
         waterIntake: newAmount
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -242,7 +242,7 @@ const FitnessTracker = () => {
   const addMeal = async (meal) => {
     try {
       const token = localStorage.getItem('token')
-      await axios.post('http://localhost:5001/api/diet/meals', meal, {
+      await axios.post('https://mind-lift-nine.vercel.app/api/diet/meals', meal, {
         headers: { Authorization: `Bearer ${token}` }
       })
       fetchDietPlan()
@@ -751,7 +751,7 @@ const FitnessTracker = () => {
                           onChange={async (e) => {
                             try {
                               const token = localStorage.getItem('token')
-                              await axios.patch(`http://localhost:5001/api/diet/meals/${meal.id}`, {
+                              await axios.patch(`https://mind-lift-nine.vercel.app/api/diet/meals/${meal.id}`, {
                                 consumed: e.target.checked
                               }, {
                                 headers: { Authorization: `Bearer ${token}` }

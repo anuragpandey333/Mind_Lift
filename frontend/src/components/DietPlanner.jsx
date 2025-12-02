@@ -19,7 +19,7 @@ const DietPlanner = () => {
   const fetchDietPlan = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await axios.get('http://localhost:5001/api/diet/plan', {
+      const response = await axios.get('https://mind-lift-nine.vercel.app/api/diet/plan', {
         headers: { Authorization: `Bearer ${token}` }
       })
       if (response.data) {
@@ -99,7 +99,7 @@ const DietPlanner = () => {
   const updateWaterIntake = async (amount) => {
     try {
       const token = localStorage.getItem('token')
-      await axios.post('http://localhost:5001/api/diet/plan', {
+      await axios.post('https://mind-lift-nine.vercel.app/api/diet/plan', {
         waterIntake: amount
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -112,7 +112,7 @@ const DietPlanner = () => {
   const addToPlan = async (meal, mealType) => {
     try {
       const token = localStorage.getItem('token')
-      await axios.post('http://localhost:5001/api/diet/meals', {
+      await axios.post('https://mind-lift-nine.vercel.app/api/diet/meals', {
         name: meal.name,
         calories: meal.calories,
         protein: meal.protein,
@@ -134,7 +134,7 @@ const DietPlanner = () => {
       const mealToRemove = dietPlan?.meals?.find(meal => meal.type === mealType)
       if (mealToRemove) {
         const token = localStorage.getItem('token')
-        await axios.delete(`http://localhost:5001/api/diet/meals/${mealToRemove.id}`, {
+        await axios.delete(`https://mind-lift-nine.vercel.app/api/diet/meals/${mealToRemove.id}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
       }

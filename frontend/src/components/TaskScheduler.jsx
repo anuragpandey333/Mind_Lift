@@ -25,7 +25,7 @@ const TaskScheduler = () => {
       const token = localStorage.getItem('token')
       console.log('Fetching tasks with token:', token ? 'exists' : 'missing')
       
-      const response = await axios.get('http://localhost:5001/api/tasks', {
+      const response = await axios.get('https://mind-lift-nine.vercel.app/api/tasks', {
         headers: { Authorization: `Bearer ${token}` }
       })
       
@@ -58,7 +58,7 @@ const TaskScheduler = () => {
       }
       setTasks(prev => [tempTask, ...prev])
       
-      const response = await axios.post('http://localhost:5001/api/tasks', newTask, {
+      const response = await axios.post('https://mind-lift-nine.vercel.app/api/tasks', newTask, {
         headers: { Authorization: `Bearer ${token}` }
       })
       
@@ -78,7 +78,7 @@ const TaskScheduler = () => {
     try {
       const task = tasks.find(t => t.id === id)
       const token = localStorage.getItem('token')
-      await axios.patch(`http://localhost:5001/api/tasks/${id}`, {
+      await axios.patch(`https://mind-lift-nine.vercel.app/api/tasks/${id}`, {
         completed: !task.completed
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -92,7 +92,7 @@ const TaskScheduler = () => {
   const deleteTask = async (id) => {
     try {
       const token = localStorage.getItem('token')
-      await axios.delete(`http://localhost:5001/api/tasks/${id}`, {
+      await axios.delete(`https://mind-lift-nine.vercel.app/api/tasks/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       fetchTasks()
