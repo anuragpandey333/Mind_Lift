@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs')
 const prisma = require('../lib/prisma')
 const auth = require('../middleware/auth')
 
+
 const router = express.Router()
 
 // Signup
@@ -87,8 +88,6 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message })
   }
 })
-
-// Get current user
 router.get('/me', auth, async (req, res) => {
   res.json({
     user: {
@@ -99,5 +98,29 @@ router.get('/me', auth, async (req, res) => {
     }
   })
 })
+
+
+
+// Test redirect route
+router.get('/test-redirect', (req, res) => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
+  res.send(`
+    <html>
+      <head><title>Test Redirect</title></head>
+      <body>
+        <p>Test redirect working! Redirecting to homepage...</p>
+        <script>
+          setTimeout(() => {
+            window.location.href = '${frontendUrl}/?test=success';
+          }, 2000);
+        </script>
+      </body>
+    </html>
+  `)
+})
+
+
+
+
 
 module.exports = router

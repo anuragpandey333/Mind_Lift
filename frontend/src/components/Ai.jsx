@@ -1,6 +1,5 @@
 import axios from 'axios'
 import React, { useState, useRef, useEffect } from 'react'
-
 import { useNavigate } from 'react-router-dom'
 
 function Ai() {
@@ -12,11 +11,24 @@ function Ai() {
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
 
-  const API_KEY = "AIzaSyASM5L5YLusC7y-kVnl1NlgHL_KEyagK-g"
+  const API_KEY = "AIzaSyCkr6mtpBEh34bDWajddD9oXjmm9wsrOps"
 
   useEffect(() => {
     const theme = localStorage.getItem('theme')
     setIsToggled(theme === 'dark')
+    
+    // Track AI chatbot page visit
+    const activity = {
+      id: Date.now(),
+      type: 'ai',
+      action: 'Used AI Chatbot',
+      timestamp: new Date().toLocaleString(),
+      icon: 'ai'
+    }
+    
+    const existingActivities = JSON.parse(localStorage.getItem('recentActivities') || '[]')
+    const updatedActivities = [activity, ...existingActivities.slice(0, 4)]
+    localStorage.setItem('recentActivities', JSON.stringify(updatedActivities))
   }, [])
 
   useEffect(() => {
@@ -45,18 +57,28 @@ function Ai() {
     setIsLoading(true)
     
     try {
+      const contextualPrompt = `You are a mental wellness assistant for college students. Please provide supportive, empathetic, and helpful responses focused on mental health, stress management, academic pressure, and overall wellbeing. User question: ${userMessage}`
+      
       const res = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`, {
         "contents": [{
-          "parts": [{ "text": userMessage }]
+          "parts": [{ "text": contextualPrompt }]
         }]
       })
       
-      const aiResponse = res.data.candidates[0].content.parts[0].text
+      const aiResponse = res.data?.candidates?.[0]?.content?.parts?.[0]?.text || "I'm sorry, I couldn't generate a response. Please try again."
       setMessages(prev => [...prev, { text: aiResponse, isUser: false, id: Date.now() + 1 }])
     } catch (error) {
       console.error("Error getting AI response:", error)
+      let errorMessage = "Sorry, I encountered an error processing your request. Please try again."
+      
+      if (error.response?.status === 403) {
+        errorMessage = "API access is currently limited. Please check your API key configuration."
+      } else if (error.response?.status === 429) {
+        errorMessage = "Too many requests. Please wait a moment before trying again."
+      }
+      
       setMessages(prev => [...prev, { 
-        text: "Sorry, I encountered an error processing your request. Please try again.",
+        text: errorMessage,
         isUser: false,
         isError: true,
         id: Date.now() + 1
@@ -122,110 +144,110 @@ function Ai() {
       </nav>
 
       <div className="pt-8 px-4 pb-40 flex flex-col animate-fade-in">
-      <div className="w-full max-w-3xl mx-auto flex-grow overflow-hidden">
-        <h1 className={`text-2xl md:text-3xl font-bold mb-6 text-center animate-fade-down ${
-          isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-        }`}>
-          <span className="inline-block mr-2 text-2xl animate-pulse">
-            🤖
-          </span>
-          AI Mental Wellness Assistant
-        </h1>
-        
-        <div className="overflow-y-auto max-h-[calc(100vh-240px)] pr-2 custom-scrollbar">
-          {messages.length === 0 && (
-            <div className="text-center py-16 animate-fade-in">
-              <div className={`inline-block p-4 rounded-full mb-4 shadow-md text-3xl ${
-                isToggled ? 'bg-[#4A70A9]/20' : 'bg-[#8FABD4]/20'
-              }`}>
-                🤖
-              </div>
-              <h2 className={`text-lg font-medium mb-2 ${
-                isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
-              }`}>Welcome to AI Mental Wellness Assistant</h2>
-              <p className={`max-w-md mx-auto ${
-                isToggled ? 'text-[#8FABD4]/80' : 'text-[#000000]/70'
-              }`}>Start a conversation about your mental wellness journey.</p>
-            </div>
-          )}
+        <div className="w-full max-w-3xl mx-auto flex-grow overflow-hidden">
+          <h1 className={`text-2xl md:text-3xl font-bold mb-6 text-center animate-fade-down ${
+            isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
+          }`}>
+            <span className="inline-block mr-2 text-2xl animate-pulse">
+              🤖
+            </span>
+            AI Mental Wellness Assistant
+          </h1>
           
-          {messages.map((message, index) => (
-            <div
-              key={message.id}
-              className={`p-4 my-3 rounded-lg shadow-md border animate-fade-up ${
-                isToggled 
-                  ? message.isUser 
-                    ? 'bg-[#000000]/60 border-[#8FABD4]/20 border-l-4 border-l-[#8FABD4]'
-                    : 'bg-[#4A70A9]/20 border-[#8FABD4]/20 border-l-4 border-l-[#4A70A9]'
-                  : message.isUser 
-                    ? 'bg-white border-[#8FABD4]/30 border-l-4 border-l-[#8FABD4]'
-                    : 'bg-[#8FABD4]/10 border-[#8FABD4]/30 border-l-4 border-l-[#4A70A9]'
-              }`}
-              style={{ 
-                animationDelay: `${index * 100}ms`,
-                animationFillMode: 'both'
-              }}
-            >
-              <div className="flex items-center mb-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm text-sm ${
-                  message.isUser 
-                    ? isToggled ? 'bg-[#8FABD4] text-white' : 'bg-[#8FABD4] text-white'
-                    : message.isError 
-                      ? "bg-red-100 text-red-600"
-                      : isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#4A70A9] text-white'
-                }`}>
-                  {message.isUser ? '👤' : '🤖'}
-                </div>
-                <span className={`ml-2 font-medium text-sm ${
-                  isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
-                }`}>
-                  {message.isUser ? "You" : "AI Assistant"}
-                </span>
-              </div>
-              
-              {message.isUser ? (
-                <p className={`pl-10 ${
-                  isToggled ? 'text-[#8FABD4]/90' : 'text-[#000000]/90'
-                }`}>{message.text}</p>
-              ) : (
-                <div className={`pl-10 whitespace-pre-wrap ${
-                  isToggled ? 'text-[#8FABD4]/90' : 'text-[#000000]/90'
-                }`}>
-                  {message.text}
-                </div>
-              )}
-            </div>
-          ))}
-          
-          {isLoading && (
-            <div className={`p-4 my-3 rounded-lg shadow-md border border-l-4 animate-fade-up ${
-              isToggled 
-                ? 'bg-[#4A70A9]/20 border-[#8FABD4]/20 border-l-[#4A70A9]'
-                : 'bg-[#8FABD4]/10 border-[#8FABD4]/30 border-l-[#4A70A9]'
-            }`}>
-              <div className="flex items-center mb-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm text-sm ${
-                  isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#4A70A9] text-white'
+          <div className="overflow-y-auto max-h-[calc(100vh-240px)] pr-2 custom-scrollbar">
+            {messages.length === 0 && (
+              <div className="text-center py-16 animate-fade-in">
+                <div className={`inline-block p-4 rounded-full mb-4 shadow-md text-3xl ${
+                  isToggled ? 'bg-[#4A70A9]/20' : 'bg-[#8FABD4]/20'
                 }`}>
                   🤖
                 </div>
-                <span className={`ml-2 font-medium text-sm ${
+                <h2 className={`text-lg font-medium mb-2 ${
                   isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
-                }`}>AI Assistant</span>
-              </div>
-              <div className="pl-10 flex items-center">
-                <div className={`animate-spin text-lg ${
-                  isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-                }`}>⟳</div>
-                <span className={`ml-2 ${
+                }`}>Welcome to AI Mental Wellness Assistant</h2>
+                <p className={`max-w-md mx-auto ${
                   isToggled ? 'text-[#8FABD4]/80' : 'text-[#000000]/70'
-                }`}>Thinking...</span>
+                }`}>Start a conversation about your mental wellness journey.</p>
               </div>
-            </div>
-          )}
-          
-          <div ref={messagesEndRef} />
-        </div>
+            )}
+            
+            {messages.map((message, index) => (
+              <div
+                key={message.id}
+                className={`p-4 my-3 rounded-lg shadow-md border animate-fade-up ${
+                  isToggled 
+                    ? message.isUser 
+                      ? 'bg-[#000000]/60 border-[#8FABD4]/20 border-l-4 border-l-[#8FABD4]'
+                      : 'bg-[#4A70A9]/20 border-[#8FABD4]/20 border-l-4 border-l-[#4A70A9]'
+                    : message.isUser 
+                      ? 'bg-white border-[#8FABD4]/30 border-l-4 border-l-[#8FABD4]'
+                      : 'bg-[#8FABD4]/10 border-[#8FABD4]/30 border-l-4 border-l-[#4A70A9]'
+                }`}
+                style={{ 
+                  animationDelay: `${index * 100}ms`,
+                  animationFillMode: 'both'
+                }}
+              >
+                <div className="flex items-center mb-2">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm text-sm ${
+                    message.isUser 
+                      ? isToggled ? 'bg-[#8FABD4] text-white' : 'bg-[#8FABD4] text-white'
+                      : message.isError 
+                        ? "bg-red-100 text-red-600"
+                        : isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#4A70A9] text-white'
+                  }`}>
+                    {message.isUser ? '👤' : '🤖'}
+                  </div>
+                  <span className={`ml-2 font-medium text-sm ${
+                    isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
+                  }`}>
+                    {message.isUser ? "You" : "AI Assistant"}
+                  </span>
+                </div>
+                
+                {message.isUser ? (
+                  <p className={`pl-10 ${
+                    isToggled ? 'text-[#8FABD4]/90' : 'text-[#000000]/90'
+                  }`}>{message.text}</p>
+                ) : (
+                  <div className={`pl-10 whitespace-pre-wrap ${
+                    isToggled ? 'text-[#8FABD4]/90' : 'text-[#000000]/90'
+                  }`}>
+                    {message.text}
+                  </div>
+                )}
+              </div>
+            ))}
+            
+            {isLoading && (
+              <div className={`p-4 my-3 rounded-lg shadow-md border border-l-4 animate-fade-up ${
+                isToggled 
+                  ? 'bg-[#4A70A9]/20 border-[#8FABD4]/20 border-l-[#4A70A9]'
+                  : 'bg-[#8FABD4]/10 border-[#8FABD4]/30 border-l-[#4A70A9]'
+              }`}>
+                <div className="flex items-center mb-2">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm text-sm ${
+                    isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#4A70A9] text-white'
+                  }`}>
+                    🤖
+                  </div>
+                  <span className={`ml-2 font-medium text-sm ${
+                    isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
+                  }`}>AI Assistant</span>
+                </div>
+                <div className="pl-10 flex items-center">
+                  <div className={`animate-spin text-lg ${
+                    isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
+                  }`}>⟳</div>
+                  <span className={`ml-2 ${
+                    isToggled ? 'text-[#8FABD4]/80' : 'text-[#000000]/70'
+                  }`}>Thinking...</span>
+                </div>
+              </div>
+            )}
+            
+            <div ref={messagesEndRef} />
+          </div>
         </div>
       </div>
 
@@ -324,17 +346,17 @@ function Ai() {
         }
         
         .custom-scrollbar::-webkit-scrollbar-track {
-          background: #F5EFFF;
+          background: ${isToggled ? '#1a1a1a' : '#F5EFFF'};
           border-radius: 10px;
         }
         
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #CDC1FF;
+          background: ${isToggled ? '#4A70A9' : '#8FABD4'};
           border-radius: 10px;
         }
         
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #818cf8;
+          background: ${isToggled ? '#8FABD4' : '#4A70A9'};
         }
       `}</style>
     </div>

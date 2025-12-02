@@ -3,6 +3,7 @@ const cors = require('cors')
 require('dotenv').config()
 
 const authRoutes = require('./routes/auth')
+const dietRoutes = require('./routes/diet')
 
 const app = express()
 
@@ -30,6 +31,7 @@ app.get('/api/health', async (req, res) => {
 })
 
 app.use('/api/auth', authRoutes)
+app.use('/api/diet', dietRoutes)
 
 const PORT = process.env.PORT || 5001
 
