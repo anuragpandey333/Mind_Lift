@@ -10,16 +10,33 @@ const Mentorship = () => {
   const [filterDomain, setFilterDomain] = useState('all')
   const [mentorRequests, setMentorRequests] = useState([])
   const [showRequestForm, setShowRequestForm] = useState(false)
+  const [showAddMentorForm, setShowAddMentorForm] = useState(false)
+  const [customMentors, setCustomMentors] = useState([])
   const [requestData, setRequestData] = useState({
     name: '',
     year: '',
     issue: '',
     description: ''
   })
+  const [newMentorData, setNewMentorData] = useState({
+    name: '',
+    role: '',
+    company: '',
+    domain: '',
+    experience: '',
+    specialization: '',
+    availability: '',
+    bio: '',
+    email: '',
+    phone: '',
+    linkedin: ''
+  })
 
   useEffect(() => {
     const theme = localStorage.getItem('theme')
+    const savedCustomMentors = localStorage.getItem('customMentors')
     setIsToggled(theme === 'dark')
+    setCustomMentors(savedCustomMentors ? JSON.parse(savedCustomMentors) : [])
     
     // Track mentorship page visit
     const activity = {
@@ -35,6 +52,44 @@ const Mentorship = () => {
     localStorage.setItem('recentActivities', JSON.stringify(updatedActivities))
   }, [])
 
+  const addCustomMentor = () => {
+    if (!newMentorData.name || !newMentorData.role || !newMentorData.email) {
+      alert('Please fill required fields (Name, Role, Email)')
+      return
+    }
+
+    const mentor = {
+      id: Date.now(),
+      name: newMentorData.name,
+      role: newMentorData.role,
+      company: newMentorData.company || 'Not specified',
+      domain: newMentorData.domain || 'General',
+      experience: newMentorData.experience || '0 years',
+      specialization: newMentorData.specialization ? newMentorData.specialization.split(',').map(s => s.trim()) : ['General Guidance'],
+      availability: newMentorData.availability || 'Flexible',
+      rating: 0,
+      sessions: 0,
+      image: '👤',
+      bio: newMentorData.bio || 'Personal mentor added by student.',
+      focus: ['Personal Mentor'],
+      contact: {
+        email: newMentorData.email,
+        phone: newMentorData.phone || 'Not provided',
+        linkedin: newMentorData.linkedin || 'Not provided'
+      },
+      isCustom: true
+    }
+
+    const updatedCustomMentors = [...customMentors, mentor]
+    setCustomMentors(updatedCustomMentors)
+    localStorage.setItem('customMentors', JSON.stringify(updatedCustomMentors))
+    setNewMentorData({
+      name: '', role: '', company: '', domain: '', experience: '', specialization: '',
+      availability: '', bio: '', email: '', phone: '', linkedin: ''
+    })
+    setShowAddMentorForm(false)
+  }
+
   const mentors = [
     {
       id: 1,
@@ -47,9 +102,10 @@ const Mentorship = () => {
       availability: 'Weekends',
       rating: 4.9,
       sessions: 127,
-      image: '👨💻',
+      image: '👨',
       bio: 'Graduated from IIT Delhi. Passionate about helping students navigate technical interviews and career decisions.',
-      focus: ['Placements', 'Coding', 'Career']
+      focus: ['Placements', 'Coding', 'Career'],
+      contact: { email: 'dhruv.kumar@gmail.com', phone: '+91-9876543210', linkedin: 'linkedin.com/in/dhruvkumar' }
     },
     {
       id: 2,
@@ -62,9 +118,10 @@ const Mentorship = () => {
       availability: 'Weekday Evenings',
       rating: 4.8,
       sessions: 95,
-      image: '👩💻',
+      image: '👩',
       bio: 'Specialized in helping students with ML projects and research papers. Published 10+ papers.',
-      focus: ['Projects', 'Research', 'ML']
+      focus: ['Projects', 'Research', 'ML'],
+      contact: { email: 'khushi.mehta@outlook.com', phone: '+91-9876543323', linkedin: 'linkedin.com/in/khushimehta' }
     },
     {
       id: 3,
@@ -77,9 +134,10 @@ const Mentorship = () => {
       availability: 'Flexible',
       rating: 4.7,
       sessions: 84,
-      image: '👨💼',
+      image: '👨',
       bio: 'From B.Tech to PM. Help students understand different career paths beyond coding.',
-      focus: ['Career Switch', 'PM Role', 'Strategy']
+      focus: ['Career Switch', 'PM Role', 'Strategy'],
+      contact: { email: 'rohit.patel@amazon.com', phone: '+91 94680 52731', linkedin: 'linkedin.com/in/rohitpatel' }
     },
     {
       id: 4,
@@ -92,9 +150,10 @@ const Mentorship = () => {
       availability: 'Weekends',
       rating: 4.9,
       sessions: 156,
-      image: '👨🏫',
+      image: '👨',
       bio: 'Helping students with academic struggles and guiding towards higher education paths.',
-      focus: ['Academics', 'GATE', 'MS/PhD']
+      focus: ['Academics', 'GATE', 'MS/PhD'],
+      contact: { email: 'naman.reddy@iitb.ac.in', phone: '+918569971000', linkedin: 'linkedin.com/in/namanreddy' }
     },
     {
       id: 5,
@@ -107,9 +166,10 @@ const Mentorship = () => {
       availability: 'Weekday Evenings',
       rating: 4.6,
       sessions: 72,
-      image: '👨🚀',
+      image: '👨',
       bio: 'Built 3 startups. Mentor students interested in entrepreneurship and product development.',
-      focus: ['Startup', 'Web Dev', 'Innovation']
+      focus: ['Startup', 'Web Dev', 'Innovation'],
+      contact: { email: 'harender.singh@techventure.com', phone: '+91 80596 86967', linkedin: 'linkedin.com/in/harendersingh' }
     },
     {
       id: 6,
@@ -122,9 +182,10 @@ const Mentorship = () => {
       availability: 'Daily',
       rating: 5.0,
       sessions: 203,
-      image: '👨⚕️',
+      image: '👨',
       bio: 'Specialized in student mental health. Here to help you manage stress and build resilience.',
-      focus: ['Mental Health', 'Stress', 'Balance']
+      focus: ['Mental Health', 'Stress', 'Balance'],
+      contact: { email: 'karan.iyer@wellness.com', phone: '+91 87085 12069', linkedin: 'linkedin.com/in/karaniyer' }
     }
   ]
 
@@ -139,7 +200,8 @@ const Mentorship = () => {
     'Internship Guidance'
   ]
 
-  const filteredMentors = mentors.filter(mentor => {
+  const allMentors = [...mentors, ...customMentors]
+  const filteredMentors = allMentors.filter(mentor => {
     const matchesSearch = mentor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          mentor.specialization.some(s => s.toLowerCase().includes(searchQuery.toLowerCase())) ||
                          mentor.domain.toLowerCase().includes(searchQuery.toLowerCase())
@@ -147,7 +209,7 @@ const Mentorship = () => {
     return matchesSearch && matchesDomain
   })
 
-  const domains = ['all', ...new Set(mentors.map(m => m.domain))]
+  const domains = ['all', ...new Set(allMentors.map(m => m.domain))]
 
   const handleRequestMentorship = (mentor) => {
     setSelectedMentor(mentor)
@@ -212,7 +274,7 @@ const Mentorship = () => {
               <div>
                 <div className={`text-2xl font-bold ${
                   isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-                }`}>{mentors.length}</div>
+                }`}>{allMentors.length}</div>
                 <div className={`text-sm ${
                   isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
                 }`}>Mentors</div>
@@ -225,6 +287,16 @@ const Mentorship = () => {
                   isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
                 }`}>Requests</div>
               </div>
+              <button
+                onClick={() => setShowAddMentorForm(true)}
+                className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+                  isToggled 
+                    ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/80 text-white' 
+                    : 'bg-[#8FABD4] hover:bg-[#8FABD4]/80 text-white'
+                }`}
+              >
+                + Add Mentor
+              </button>
             </div>
           </div>
         </div>
@@ -380,6 +452,30 @@ const Mentorship = () => {
                     }`}>
                       <span>🕒</span>
                       <span>{mentor.availability}</span>
+                    </div>
+
+                    <div className={`mb-4 p-3 rounded-lg ${
+                      isToggled ? 'bg-[#000000]/40' : 'bg-gray-50'
+                    }`}>
+                      <div className={`text-sm font-semibold mb-2 ${
+                        isToggled ? 'text-[#8FABD4]' : 'text-gray-700'
+                      }`}>Contact Information:</div>
+                      <div className={`space-y-1 text-xs ${
+                        isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
+                      }`}>
+                        <div className="flex items-center gap-2">
+                          <span>📧</span>
+                          <span>{mentor.contact.email}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span>📱</span>
+                          <span>{mentor.contact.phone}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span>💼</span>
+                          <span>{mentor.contact.linkedin}</span>
+                        </div>
+                      </div>
                     </div>
 
                     <button
@@ -594,6 +690,161 @@ const Mentorship = () => {
                   <span className="text-xl">✅</span>
                   <span>Take breaks. Rest is productive. Burnout helps no one.</span>
                 </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Add Mentor Form Modal */}
+        {showAddMentorForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className={`rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ${
+              isToggled ? 'bg-[#000000]/95' : 'bg-white'
+            }`}>
+              <div className={`p-6 text-white ${
+                isToggled 
+                  ? 'bg-gradient-to-br from-[#4A70A9] to-[#8FABD4]'
+                  : 'bg-gradient-to-br from-[#8FABD4] to-[#4A70A9]'
+              }`}>
+                <h2 className="text-2xl font-bold mb-2">Add Personal Mentor</h2>
+                <p className="text-indigo-100">Add someone you know as your mentor</p>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <input
+                    type="text"
+                    placeholder="Mentor Name *"
+                    value={newMentorData.name}
+                    onChange={(e) => setNewMentorData({...newMentorData, name: e.target.value})}
+                    className={`w-full p-3 border-2 rounded-lg focus:outline-none ${
+                      isToggled 
+                        ? 'bg-[#000000]/40 border-[#8FABD4]/30 text-[#8FABD4] focus:border-[#4A70A9] placeholder-[#8FABD4]/50'
+                        : 'bg-white border-gray-200 text-gray-800 focus:border-indigo-500 placeholder-gray-500'
+                    }`}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Role/Position *"
+                    value={newMentorData.role}
+                    onChange={(e) => setNewMentorData({...newMentorData, role: e.target.value})}
+                    className={`w-full p-3 border-2 rounded-lg focus:outline-none ${
+                      isToggled 
+                        ? 'bg-[#000000]/40 border-[#8FABD4]/30 text-[#8FABD4] focus:border-[#4A70A9] placeholder-[#8FABD4]/50'
+                        : 'bg-white border-gray-200 text-gray-800 focus:border-indigo-500 placeholder-gray-500'
+                    }`}
+                  />
+                </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <input
+                    type="text"
+                    placeholder="Company"
+                    value={newMentorData.company}
+                    onChange={(e) => setNewMentorData({...newMentorData, company: e.target.value})}
+                    className={`w-full p-3 border-2 rounded-lg focus:outline-none ${
+                      isToggled 
+                        ? 'bg-[#000000]/40 border-[#8FABD4]/30 text-[#8FABD4] focus:border-[#4A70A9] placeholder-[#8FABD4]/50'
+                        : 'bg-white border-gray-200 text-gray-800 focus:border-indigo-500 placeholder-gray-500'
+                    }`}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Domain"
+                    value={newMentorData.domain}
+                    onChange={(e) => setNewMentorData({...newMentorData, domain: e.target.value})}
+                    className={`w-full p-3 border-2 rounded-lg focus:outline-none ${
+                      isToggled 
+                        ? 'bg-[#000000]/40 border-[#8FABD4]/30 text-[#8FABD4] focus:border-[#4A70A9] placeholder-[#8FABD4]/50'
+                        : 'bg-white border-gray-200 text-gray-800 focus:border-indigo-500 placeholder-gray-500'
+                    }`}
+                  />
+                </div>
+                <input
+                  type="email"
+                  placeholder="Email Address *"
+                  value={newMentorData.email}
+                  onChange={(e) => setNewMentorData({...newMentorData, email: e.target.value})}
+                  className={`w-full p-3 border-2 rounded-lg focus:outline-none ${
+                    isToggled 
+                      ? 'bg-[#000000]/40 border-[#8FABD4]/30 text-[#8FABD4] focus:border-[#4A70A9] placeholder-[#8FABD4]/50'
+                      : 'bg-white border-gray-200 text-gray-800 focus:border-indigo-500 placeholder-gray-500'
+                  }`}
+                />
+                <div className="grid md:grid-cols-2 gap-4">
+                  <input
+                    type="tel"
+                    placeholder="Phone Number"
+                    value={newMentorData.phone}
+                    onChange={(e) => setNewMentorData({...newMentorData, phone: e.target.value})}
+                    className={`w-full p-3 border-2 rounded-lg focus:outline-none ${
+                      isToggled 
+                        ? 'bg-[#000000]/40 border-[#8FABD4]/30 text-[#8FABD4] focus:border-[#4A70A9] placeholder-[#8FABD4]/50'
+                        : 'bg-white border-gray-200 text-gray-800 focus:border-indigo-500 placeholder-gray-500'
+                    }`}
+                  />
+                  <input
+                    type="text"
+                    placeholder="LinkedIn Profile"
+                    value={newMentorData.linkedin}
+                    onChange={(e) => setNewMentorData({...newMentorData, linkedin: e.target.value})}
+                    className={`w-full p-3 border-2 rounded-lg focus:outline-none ${
+                      isToggled 
+                        ? 'bg-[#000000]/40 border-[#8FABD4]/30 text-[#8FABD4] focus:border-[#4A70A9] placeholder-[#8FABD4]/50'
+                        : 'bg-white border-gray-200 text-gray-800 focus:border-indigo-500 placeholder-gray-500'
+                    }`}
+                  />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Specialization (comma separated)"
+                  value={newMentorData.specialization}
+                  onChange={(e) => setNewMentorData({...newMentorData, specialization: e.target.value})}
+                  className={`w-full p-3 border-2 rounded-lg focus:outline-none ${
+                    isToggled 
+                      ? 'bg-[#000000]/40 border-[#8FABD4]/30 text-[#8FABD4] focus:border-[#4A70A9] placeholder-[#8FABD4]/50'
+                      : 'bg-white border-gray-200 text-gray-800 focus:border-indigo-500 placeholder-gray-500'
+                  }`}
+                />
+                <textarea
+                  placeholder="Bio/Description"
+                  value={newMentorData.bio}
+                  onChange={(e) => setNewMentorData({...newMentorData, bio: e.target.value})}
+                  className={`w-full p-3 border-2 rounded-lg focus:outline-none resize-none ${
+                    isToggled 
+                      ? 'bg-[#000000]/40 border-[#8FABD4]/30 text-[#8FABD4] focus:border-[#4A70A9] placeholder-[#8FABD4]/50'
+                      : 'bg-white border-gray-200 text-gray-800 focus:border-indigo-500 placeholder-gray-500'
+                  }`}
+                  rows="3"
+                />
+
+                <div className="flex gap-3 pt-4">
+                  <button
+                    onClick={() => {
+                      setShowAddMentorForm(false)
+                      setNewMentorData({
+                        name: '', role: '', company: '', domain: '', experience: '', specialization: '',
+                        availability: '', bio: '', email: '', phone: '', linkedin: ''
+                      })
+                    }}
+                    className={`flex-1 px-6 py-3 border-2 font-semibold rounded-lg transition-all ${
+                      isToggled 
+                        ? 'border-[#8FABD4]/30 text-[#8FABD4] hover:bg-[#8FABD4]/10'
+                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={addCustomMentor}
+                    className={`flex-1 font-semibold py-3 rounded-lg transition-all text-white ${
+                      isToggled 
+                        ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/80'
+                        : 'bg-[#8FABD4] hover:bg-[#8FABD4]/80'
+                    }`}
+                  >
+                    Add Mentor
+                  </button>
+                </div>
               </div>
             </div>
           </div>
