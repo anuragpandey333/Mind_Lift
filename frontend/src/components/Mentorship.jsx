@@ -8,16 +8,10 @@ const Mentorship = () => {
   const [selectedMentor, setSelectedMentor] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterDomain, setFilterDomain] = useState('all')
-  const [mentorRequests, setMentorRequests] = useState([])
-  const [showRequestForm, setShowRequestForm] = useState(false)
+
   const [showAddMentorForm, setShowAddMentorForm] = useState(false)
   const [customMentors, setCustomMentors] = useState([])
-  const [requestData, setRequestData] = useState({
-    name: '',
-    year: '',
-    issue: '',
-    description: ''
-  })
+
   const [newMentorData, setNewMentorData] = useState({
     name: '',
     role: '',
@@ -189,16 +183,7 @@ const Mentorship = () => {
     }
   ]
 
-  const issues = [
-    'Academic Pressure',
-    'Career Confusion',
-    'Placement Preparation',
-    'Project Guidance',
-    'Time Management',
-    'Mental Health Support',
-    'Subject Understanding',
-    'Internship Guidance'
-  ]
+
 
   const allMentors = [...mentors, ...customMentors]
   const filteredMentors = allMentors.filter(mentor => {
@@ -211,35 +196,7 @@ const Mentorship = () => {
 
   const domains = ['all', ...new Set(allMentors.map(m => m.domain))]
 
-  const handleRequestMentorship = (mentor) => {
-    setSelectedMentor(mentor)
-    setShowRequestForm(true)
-  }
 
-  const submitRequest = () => {
-    if (!requestData.name || !requestData.year || !requestData.issue) {
-      alert('Please fill all required fields')
-      return
-    }
-
-    const newRequest = {
-      id: Date.now(),
-      mentorId: selectedMentor.id,
-      mentorName: selectedMentor.name,
-      studentName: requestData.name,
-      year: requestData.year,
-      issue: requestData.issue,
-      description: requestData.description,
-      status: 'pending',
-      timestamp: new Date().toLocaleString()
-    }
-
-    setMentorRequests([newRequest, ...mentorRequests])
-    setRequestData({ name: '', year: '', issue: '', description: '' })
-    setShowRequestForm(false)
-    setSelectedMentor(null)
-    setActiveTab('requests')
-  }
 
   return (
     <div className={`min-h-screen transition-all duration-700 ${
@@ -279,14 +236,7 @@ const Mentorship = () => {
                   isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
                 }`}>Mentors</div>
               </div>
-              <div>
-                <div className={`text-2xl font-bold ${
-                  isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-                }`}>{mentorRequests.length}</div>
-                <div className={`text-sm ${
-                  isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
-                }`}>Requests</div>
-              </div>
+
               <button
                 onClick={() => setShowAddMentorForm(true)}
                 className={`px-4 py-2 rounded-lg font-semibold transition-all ${
@@ -318,16 +268,7 @@ const Mentorship = () => {
             >
               🎓 Find Mentors
             </button>
-            <button
-              onClick={() => setActiveTab('requests')}
-              className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
-                activeTab === 'requests'
-                  ? isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#8FABD4] text-white'
-                  : isToggled ? 'text-[#8FABD4] hover:bg-[#4A70A9]/20' : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              My Requests ({mentorRequests.length})
-            </button>
+
             <button
               onClick={() => setActiveTab('resources')}
               className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
@@ -479,14 +420,13 @@ const Mentorship = () => {
                     </div>
 
                     <button
-                      onClick={() => handleRequestMentorship(mentor)}
                       className={`w-full font-semibold py-3 rounded-lg transition-all ${
                         isToggled 
                           ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/80 text-white' 
                           : 'bg-[#8FABD4] hover:bg-[#8FABD4]/80 text-white'
                       }`}
                     >
-                      Request Mentorship
+                      Get Connected
                     </button>
                   </div>
                 </div>
@@ -495,96 +435,7 @@ const Mentorship = () => {
           </>
         )}
 
-        {/* Requests Tab */}
-        {activeTab === 'requests' && (
-          <div className={`rounded-2xl shadow-lg p-6 ${
-            isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
-          }`}>
-            <h2 className={`text-2xl font-bold mb-6 ${
-              isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-            }`}>My Mentorship Requests</h2>
-            {mentorRequests.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">💬</div>
-                <h3 className={`text-xl font-semibold mb-2 ${
-                  isToggled ? 'text-[#8FABD4]' : 'text-gray-700'
-                }`}>No requests yet</h3>
-                <p className={`mb-4 ${
-                  isToggled ? 'text-[#8FABD4]/80' : 'text-gray-500'
-                }`}>Start by requesting mentorship from our experienced mentors</p>
-                <button
-                  onClick={() => setActiveTab('mentors')}
-                  className={`px-6 py-3 rounded-lg font-semibold transition-all ${
-                    isToggled 
-                      ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/80 text-white' 
-                      : 'bg-[#8FABD4] hover:bg-[#8FABD4]/80 text-white'
-                  }`}
-                >
-                  Browse Mentors
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {mentorRequests.map(request => (
-                  <div key={request.id} className={`border-2 rounded-xl p-6 transition-all ${
-                    isToggled ? 'border-[#8FABD4]/30 hover:border-[#4A70A9]' : 'border-gray-200 hover:border-indigo-300'
-                  }`}>
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h3 className={`text-lg font-bold ${
-                          isToggled ? 'text-[#8FABD4]' : 'text-gray-800'
-                        }`}>{request.mentorName}</h3>
-                        <p className={`text-sm ${
-                          isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
-                        }`}>{request.timestamp}</p>
-                      </div>
-                      <span className={`px-4 py-1 rounded-full text-sm font-semibold ${
-                        request.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                        request.status === 'accepted' ? 'bg-green-100 text-green-700' :
-                        'bg-red-100 text-red-700'
-                      }`}>
-                        {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
-                      </span>
-                    </div>
-                    <div className="grid md:grid-cols-2 gap-4 mb-3">
-                      <div>
-                        <span className={`text-sm font-semibold ${
-                          isToggled ? 'text-[#8FABD4]' : 'text-gray-700'
-                        }`}>Student: </span>
-                        <span className={`text-sm ${
-                          isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
-                        }`}>{request.studentName}</span>
-                      </div>
-                      <div>
-                        <span className={`text-sm font-semibold ${
-                          isToggled ? 'text-[#8FABD4]' : 'text-gray-700'
-                        }`}>Year: </span>
-                        <span className={`text-sm ${
-                          isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
-                        }`}>{request.year}</span>
-                      </div>
-                    </div>
-                    <div className="mb-3">
-                      <span className={`text-sm font-semibold ${
-                        isToggled ? 'text-[#8FABD4]' : 'text-gray-700'
-                      }`}>Issue: </span>
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ml-2 ${
-                        isToggled ? 'bg-[#8FABD4]/20 text-[#8FABD4]' : 'bg-purple-100 text-purple-700'
-                      }`}>
-                        {request.issue}
-                      </span>
-                    </div>
-                    {request.description && (
-                      <p className={`text-sm p-3 rounded-lg ${
-                        isToggled ? 'text-[#8FABD4]/90 bg-[#000000]/40' : 'text-gray-600 bg-gray-50'
-                      }`}>{request.description}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+
 
         {/* Resources Tab */}
         {activeTab === 'resources' && (
@@ -850,135 +701,7 @@ const Mentorship = () => {
           </div>
         )}
 
-        {/* Request Form Modal */}
-        {showRequestForm && selectedMentor && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className={`rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto ${
-              isToggled ? 'bg-[#000000]/95' : 'bg-white'
-            }`}>
-              <div className={`p-6 text-white ${
-                isToggled 
-                  ? 'bg-gradient-to-br from-[#4A70A9] to-[#8FABD4]'
-                  : 'bg-gradient-to-br from-[#8FABD4] to-[#4A70A9]'
-              }`}>
-                <h2 className="text-2xl font-bold mb-2">Request Mentorship</h2>
-                <p className="text-indigo-100">Connecting with {selectedMentor.name}</p>
-              </div>
 
-              <div className="p-6 space-y-4">
-                <div>
-                  <label className={`block text-sm font-semibold mb-2 ${
-                    isToggled ? 'text-[#8FABD4]' : 'text-gray-700'
-                  }`}>
-                    Your Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={requestData.name}
-                    onChange={(e) => setRequestData({...requestData, name: e.target.value})}
-                    placeholder="Enter your full name"
-                    className={`w-full p-3 border-2 rounded-lg focus:outline-none ${
-                      isToggled 
-                        ? 'bg-[#000000]/40 border-[#8FABD4]/30 text-[#8FABD4] focus:border-[#4A70A9] placeholder-[#8FABD4]/50'
-                        : 'bg-white border-gray-200 text-gray-800 focus:border-indigo-500 placeholder-gray-500'
-                    }`}
-                  />
-                </div>
-
-                <div>
-                  <label className={`block text-sm font-semibold mb-2 ${
-                    isToggled ? 'text-[#8FABD4]' : 'text-gray-700'
-                  }`}>
-                    Current Year <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={requestData.year}
-                    onChange={(e) => setRequestData({...requestData, year: e.target.value})}
-                    className={`w-full p-3 border-2 rounded-lg focus:outline-none ${
-                      isToggled 
-                        ? 'bg-[#000000]/40 border-[#8FABD4]/30 text-[#8FABD4] focus:border-[#4A70A9]'
-                        : 'bg-white border-gray-200 text-gray-800 focus:border-indigo-500'
-                    }`}
-                  >
-                    <option value="">Select your year</option>
-                    <option value="1st Year">1st Year</option>
-                    <option value="2nd Year">2nd Year</option>
-                    <option value="3rd Year">3rd Year</option>
-                    <option value="4th Year">4th Year</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className={`block text-sm font-semibold mb-2 ${
-                    isToggled ? 'text-[#8FABD4]' : 'text-gray-700'
-                  }`}>
-                    What do you need help with? <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={requestData.issue}
-                    onChange={(e) => setRequestData({...requestData, issue: e.target.value})}
-                    className={`w-full p-3 border-2 rounded-lg focus:outline-none ${
-                      isToggled 
-                        ? 'bg-[#000000]/40 border-[#8FABD4]/30 text-[#8FABD4] focus:border-[#4A70A9]'
-                        : 'bg-white border-gray-200 text-gray-800 focus:border-indigo-500'
-                    }`}
-                  >
-                    <option value="">Select an issue</option>
-                    {issues.map(issue => (
-                      <option key={issue} value={issue}>{issue}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className={`block text-sm font-semibold mb-2 ${
-                    isToggled ? 'text-[#8FABD4]' : 'text-gray-700'
-                  }`}>
-                    Describe your situation (Optional)
-                  </label>
-                  <textarea
-                    value={requestData.description}
-                    onChange={(e) => setRequestData({...requestData, description: e.target.value})}
-                    placeholder="Share more details about what you're facing and what kind of guidance you're looking for..."
-                    className={`w-full p-3 border-2 rounded-lg focus:outline-none resize-none ${
-                      isToggled 
-                        ? 'bg-[#000000]/40 border-[#8FABD4]/30 text-[#8FABD4] focus:border-[#4A70A9] placeholder-[#8FABD4]/50'
-                        : 'bg-white border-gray-200 text-gray-800 focus:border-indigo-500 placeholder-gray-500'
-                    }`}
-                    rows="4"
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <button
-                    onClick={() => {
-                      setShowRequestForm(false)
-                      setSelectedMentor(null)
-                      setRequestData({ name: '', year: '', issue: '', description: '' })
-                    }}
-                    className={`flex-1 px-6 py-3 border-2 font-semibold rounded-lg transition-all ${
-                      isToggled 
-                        ? 'border-[#8FABD4]/30 text-[#8FABD4] hover:bg-[#8FABD4]/10'
-                        : 'border-gray-300 text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={submitRequest}
-                    className={`flex-1 font-semibold py-3 rounded-lg transition-all text-white ${
-                      isToggled 
-                        ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/80'
-                        : 'bg-[#8FABD4] hover:bg-[#8FABD4]/80'
-                    }`}
-                  >
-                    📤 Send Request
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )
