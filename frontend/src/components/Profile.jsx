@@ -11,10 +11,12 @@ const Profile = () => {
     email: '',
     bio: '',
     phone: '',
-    location: ''
+    location: '',
+    profilePhoto: ''
   })
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [photoPreview, setPhotoPreview] = useState('')
 
   useEffect(() => {
     const theme = localStorage.getItem('theme')
@@ -26,14 +28,29 @@ const Profile = () => {
       email: userData.email || '',
       bio: userData.bio || '',
       phone: userData.phone || '',
-      location: userData.location || ''
+      location: userData.location || '',
+      profilePhoto: userData.profilePhoto || ''
     })
+    setPhotoPreview(userData.profilePhoto || '')
   }, [])
 
   const toggleTheme = () => {
     const newTheme = !isToggled
     setIsToggled(newTheme)
     localStorage.setItem('theme', newTheme ? 'dark' : 'light')
+  }
+
+  const handlePhotoUpload = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const photoUrl = e.target.result
+        setPhotoPreview(photoUrl)
+        setFormData({ ...formData, profilePhoto: photoUrl })
+      }
+      reader.readAsDataURL(file)
+    }
   }
 
   const handleSave = async () => {
@@ -78,10 +95,53 @@ const Profile = () => {
               : 'bg-white/90 border-[#8FABD4]/20'
           }`}>
             <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 mb-8">
-              <div className={`w-24 h-24 rounded-full flex items-center justify-center text-2xl font-bold text-white ${
-                isToggled ? 'bg-[#4A70A9]' : 'bg-[#8FABD4]'
-              }`}>
-                {formData.name.charAt(0).toUpperCase() || 'U'}
+              <div className="flex flex-col items-center space-y-3">
+                <div className="relative">
+                  {photoPreview || formData.profilePhoto ? (
+                    <img 
+                      src={photoPreview || formData.profilePhoto} 
+                      alt="Profile" 
+                      className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
+                    />
+                  ) : (
+                    <div className={`w-24 h-24 rounded-full flex items-center justify-center text-2xl font-bold text-white ${
+                      isToggled ? 'bg-[#4A70A9]' : 'bg-[#8FABD4]'
+                    }`}>
+                      {formData.name.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                  )}
+                  {isEditing && (
+                    <label className={`absolute -bottom-2 -right-2 w-10 h-10 rounded-full flex items-center justify-center cursor-pointer shadow-lg transition-all duration-300 hover:scale-110 border-2 border-white ${
+                      isToggled ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/90' : 'bg-[#8FABD4] hover:bg-[#8FABD4]/90'
+                    }`}>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handlePhotoUpload}
+                        className="hidden"
+                      />
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </label>
+                  )}
+                </div>
+                {isEditing && (
+                  <label className={`px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all duration-300 hover:scale-105 ${
+                    isToggled 
+                      ? 'bg-[#4A70A9]/20 text-[#8FABD4] hover:bg-[#4A70A9]/30' 
+                      : 'bg-[#8FABD4]/20 text-[#4A70A9] hover:bg-[#8FABD4]/30'
+                  }`}>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                    />
+                    📷 Upload Photo
+                  </label>
+                )}
               </div>
               <div className="text-center sm:text-left">
                 <h2 className={`text-2xl font-bold ${
@@ -125,15 +185,15 @@ const Profile = () => {
 
               <div className="space-y-2">
                 <label className={`block text-sm font-semibold ${
-                  isToggled ? 'text-[#D2B48C]' : 'text-[#5A5A5A]'
+                  isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
                 }`}>Email Address</label>
                 <input
                   type="email"
                   disabled={!isEditing}
                   className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 ${
                     isToggled 
-                      ? 'border-[#8B4513]/30 focus:ring-[#8B4513] bg-[#2A2A2A] text-[#D2B48C] placeholder-[#D2B48C]/60' 
-                      : 'border-[#8B4513]/30 focus:ring-[#8B4513] bg-[#DEB887]/30 text-[#5A5A5A] placeholder-[#5A5A5A]/70'
+                      ? 'border-[#4A70A9]/30 focus:ring-[#4A70A9] bg-[#000000] text-[#8FABD4] placeholder-[#8FABD4]/60' 
+                      : 'border-[#8FABD4]/30 focus:ring-[#8FABD4] bg-[#8FABD4]/10 text-[#000000] placeholder-[#000000]/70'
                   } ${!isEditing ? 'opacity-60' : ''}`}
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -142,15 +202,15 @@ const Profile = () => {
 
               <div className="space-y-2">
                 <label className={`block text-sm font-semibold ${
-                  isToggled ? 'text-[#D2B48C]' : 'text-[#5A5A5A]'
+                  isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
                 }`}>Phone Number</label>
                 <input
                   type="tel"
                   disabled={!isEditing}
                   className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 ${
                     isToggled 
-                      ? 'border-[#8B4513]/30 focus:ring-[#8B4513] bg-[#2A2A2A] text-[#D2B48C] placeholder-[#D2B48C]/60' 
-                      : 'border-[#8B4513]/30 focus:ring-[#8B4513] bg-[#DEB887]/30 text-[#5A5A5A] placeholder-[#5A5A5A]/70'
+                      ? 'border-[#4A70A9]/30 focus:ring-[#4A70A9] bg-[#000000] text-[#8FABD4] placeholder-[#8FABD4]/60' 
+                      : 'border-[#8FABD4]/30 focus:ring-[#8FABD4] bg-[#8FABD4]/10 text-[#000000] placeholder-[#000000]/70'
                   } ${!isEditing ? 'opacity-60' : ''}`}
                   placeholder="Enter phone number"
                   value={formData.phone}
@@ -160,15 +220,15 @@ const Profile = () => {
 
               <div className="space-y-2">
                 <label className={`block text-sm font-semibold ${
-                  isToggled ? 'text-[#D2B48C]' : 'text-[#5A5A5A]'
+                  isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
                 }`}>Location</label>
                 <input
                   type="text"
                   disabled={!isEditing}
                   className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 ${
                     isToggled 
-                      ? 'border-[#8B4513]/30 focus:ring-[#8B4513] bg-[#2A2A2A] text-[#D2B48C] placeholder-[#D2B48C]/60' 
-                      : 'border-[#8B4513]/30 focus:ring-[#8B4513] bg-[#DEB887]/30 text-[#5A5A5A] placeholder-[#5A5A5A]/70'
+                      ? 'border-[#4A70A9]/30 focus:ring-[#4A70A9] bg-[#000000] text-[#8FABD4] placeholder-[#8FABD4]/60' 
+                      : 'border-[#8FABD4]/30 focus:ring-[#8FABD4] bg-[#8FABD4]/10 text-[#000000] placeholder-[#000000]/70'
                   } ${!isEditing ? 'opacity-60' : ''}`}
                   placeholder="Enter your location"
                   value={formData.location}
@@ -178,15 +238,15 @@ const Profile = () => {
 
               <div className="space-y-2 md:col-span-2">
                 <label className={`block text-sm font-semibold ${
-                  isToggled ? 'text-[#D2B48C]' : 'text-[#5A5A5A]'
+                  isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
                 }`}>Bio</label>
                 <textarea
                   disabled={!isEditing}
                   rows={4}
                   className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 resize-none ${
                     isToggled 
-                      ? 'border-[#8B4513]/30 focus:ring-[#8B4513] bg-[#2A2A2A] text-[#D2B48C] placeholder-[#D2B48C]/60' 
-                      : 'border-[#8B4513]/30 focus:ring-[#8B4513] bg-[#DEB887]/30 text-[#5A5A5A] placeholder-[#5A5A5A]/70'
+                      ? 'border-[#4A70A9]/30 focus:ring-[#4A70A9] bg-[#000000] text-[#8FABD4] placeholder-[#8FABD4]/60' 
+                      : 'border-[#8FABD4]/30 focus:ring-[#8FABD4] bg-[#8FABD4]/10 text-[#000000] placeholder-[#000000]/70'
                   } ${!isEditing ? 'opacity-60' : ''}`}
                   placeholder="Tell us about yourself..."
                   value={formData.bio}

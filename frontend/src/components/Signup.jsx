@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
 const Signup = ({ setIsAuthenticated }) => {
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -39,6 +40,7 @@ const Signup = ({ setIsAuthenticated }) => {
       localStorage.setItem('user', JSON.stringify(response.data.user))
       localStorage.setItem('isNewUser', 'true')
       setIsAuthenticated(true)
+      navigate('/')
     } catch (err) {
       setError(err.response?.data?.message || 'Signup failed')
     } finally {
@@ -98,15 +100,15 @@ const Signup = ({ setIsAuthenticated }) => {
 
           <div className="space-y-2">
             <label className={`block text-sm font-semibold transition-all duration-300 ${
-              isToggled ? 'text-[#FFF2EF]' : 'text-gray-700'
+              isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
             }`}>Email Address</label>
             <input
               type="email"
               required
               className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 ${
                 isToggled 
-                  ? 'border-[#F7A5A5]/30 focus:ring-[#F7A5A5] bg-[#FFDBB6]/20 text-[#FFF2EF] placeholder-[#FFF2EF]/60' 
-                  : 'border-[#687FE5]/30 focus:ring-[#687FE5] bg-[#FEEBF6]/30 text-gray-900 placeholder-gray-500'
+                  ? 'border-[#4A70A9]/30 focus:ring-[#4A70A9] bg-[#4A70A9]/20 text-[#8FABD4] placeholder-[#8FABD4]/60' 
+                  : 'border-[#8FABD4]/30 focus:ring-[#8FABD4] bg-[#8FABD4]/10 text-[#000000] placeholder-[#000000]/70'
               }`}
               placeholder="Enter your email"
               value={formData.email}
@@ -116,7 +118,7 @@ const Signup = ({ setIsAuthenticated }) => {
 
           <div className="space-y-2">
             <label className={`block text-sm font-semibold transition-all duration-300 ${
-              isToggled ? 'text-[#FFF2EF]' : 'text-gray-700'
+              isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
             }`}>Password</label>
             <input
               type="password"
@@ -124,8 +126,8 @@ const Signup = ({ setIsAuthenticated }) => {
               minLength="6"
               className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 ${
                 isToggled 
-                  ? 'border-[#F7A5A5]/30 focus:ring-[#F7A5A5] bg-[#FFDBB6]/20 text-[#FFF2EF] placeholder-[#FFF2EF]/60' 
-                  : 'border-[#687FE5]/30 focus:ring-[#687FE5] bg-[#FEEBF6]/30 text-gray-900 placeholder-gray-500'
+                  ? 'border-[#4A70A9]/30 focus:ring-[#4A70A9] bg-[#4A70A9]/20 text-[#8FABD4] placeholder-[#8FABD4]/60' 
+                  : 'border-[#8FABD4]/30 focus:ring-[#8FABD4] bg-[#8FABD4]/10 text-[#000000] placeholder-[#000000]/70'
               }`}
               placeholder="Create a password (min. 6 characters)"
               value={formData.password}
@@ -135,15 +137,15 @@ const Signup = ({ setIsAuthenticated }) => {
 
           <div className="space-y-2">
             <label className={`block text-sm font-semibold transition-all duration-300 ${
-              isToggled ? 'text-[#FFF2EF]' : 'text-gray-700'
+              isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
             }`}>Confirm Password</label>
             <input
               type="password"
               required
               className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 ${
                 isToggled 
-                  ? 'border-[#F7A5A5]/30 focus:ring-[#F7A5A5] bg-[#FFDBB6]/20 text-[#FFF2EF] placeholder-[#FFF2EF]/60' 
-                  : 'border-[#687FE5]/30 focus:ring-[#687FE5] bg-[#FEEBF6]/30 text-gray-900 placeholder-gray-500'
+                  ? 'border-[#4A70A9]/30 focus:ring-[#4A70A9] bg-[#4A70A9]/20 text-[#8FABD4] placeholder-[#8FABD4]/60' 
+                  : 'border-[#8FABD4]/30 focus:ring-[#8FABD4] bg-[#8FABD4]/10 text-[#000000] placeholder-[#000000]/70'
               }`}
               placeholder="Confirm your password"
               value={formData.confirmPassword}
@@ -178,9 +180,11 @@ const Signup = ({ setIsAuthenticated }) => {
               'Create Account'
             )}
           </button>
+
+
         </form>
 
-        <div className="mt-8 text-center">
+        <div className="mt-6 text-center">
           <p className={`font-medium tracking-wide transition-all duration-300 ${
             isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
           }`}>

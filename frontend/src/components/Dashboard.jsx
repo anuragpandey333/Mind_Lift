@@ -6,16 +6,40 @@ const Dashboard = ({ setIsAuthenticated }) => {
   const [user, setUser] = useState(null)
   const [isToggled, setIsToggled] = useState(false)
   const [isNewUser, setIsNewUser] = useState(false)
+  const [recentActivities, setRecentActivities] = useState([])
+  const [stats, setStats] = useState({ daysActive: 0, moodEntries: 0, goalsAchieved: 0 })
+
+  const deleteActivity = (activityId) => {
+    const updatedActivities = recentActivities.filter(activity => activity.id !== activityId)
+    setRecentActivities(updatedActivities)
+    localStorage.setItem('recentActivities', JSON.stringify(updatedActivities))
+  }
+
+  const updateStats = (type, increment = true) => {
+    const newStats = { ...stats }
+    if (increment) {
+      newStats[type] += 1
+    } else {
+      newStats[type] = Math.max(0, newStats[type] - 1)
+    }
+    setStats(newStats)
+    localStorage.setItem('userStats', JSON.stringify(newStats))
+  }
 
   useEffect(() => {
     const userData = localStorage.getItem('user')
     const theme = localStorage.getItem('theme')
     const newUserFlag = localStorage.getItem('isNewUser')
+    const activities = localStorage.getItem('recentActivities')
+    const userStats = localStorage.getItem('userStats')
+    
     if (userData) {
       setUser(JSON.parse(userData))
     }
     setIsToggled(theme === 'dark')
     setIsNewUser(newUserFlag === 'true')
+    setRecentActivities(activities ? JSON.parse(activities) : [])
+    setStats(userStats ? JSON.parse(userStats) : { daysActive: 7, moodEntries: 12, goalsAchieved: 3 })
   }, [])
 
   useEffect(() => {
@@ -177,11 +201,19 @@ const Dashboard = ({ setIsAuthenticated }) => {
                       isToggled ? 'bg-[#4A70A9]/20 hover:bg-[#4A70A9]/30' : 'bg-[#8FABD4]/10 hover:bg-[#8FABD4]/20'
                     }`}
                   >
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-white ${
-                      isToggled ? 'bg-[#4A70A9]' : 'bg-[#8FABD4]'
-                    }`}>
-                      {user.name.charAt(0).toUpperCase()}
-                    </div>
+                    {user.profilePhoto ? (
+                      <img 
+                        src={user.profilePhoto} 
+                        alt="Profile" 
+                        className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+                      />
+                    ) : (
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-white ${
+                        isToggled ? 'bg-[#4A70A9]' : 'bg-[#8FABD4]'
+                      }`}>
+                        {user.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                     <div className="hidden md:block">
                       <p className={`font-semibold text-sm ${
                         isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
@@ -212,10 +244,20 @@ const Dashboard = ({ setIsAuthenticated }) => {
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         {/* Hero Section */}
         <div className="text-center mb-12">
-          <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full mb-6 text-2xl font-bold text-white ${
-            isToggled ? 'bg-[#4A70A9]' : 'bg-[#8FABD4]'
-          }`}>
-            {user?.name?.charAt(0).toUpperCase() || 'U'}
+          <div className="flex justify-center mb-6">
+            {user?.profilePhoto ? (
+              <img 
+                src={user.profilePhoto} 
+                alt="Profile" 
+                className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
+              />
+            ) : (
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold text-white ${
+                isToggled ? 'bg-[#4A70A9]' : 'bg-[#8FABD4]'
+              }`}>
+                {user?.name?.charAt(0).toUpperCase() || 'U'}
+              </div>
+            )}
           </div>
           <h2 className={`text-3xl sm:text-4xl font-bold tracking-tight mb-4 transition-all duration-500 ${
             isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
@@ -276,11 +318,20 @@ const Dashboard = ({ setIsAuthenticated }) => {
                   <p className={`text-sm leading-relaxed mb-4 ${
                     isToggled ? 'text-[#8FABD4]/80' : 'text-[#000000]/80'
                   }`}>{feature.description}</p>
-                  <button className={`w-full text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 ${
-                    isToggled 
-                      ? 'bg-gradient-to-r from-[#4A70A9] to-[#8FABD4] text-white hover:shadow-lg' 
-                      : 'bg-gradient-to-r from-[#8FABD4] to-[#4A70A9] text-white hover:shadow-lg'
-                  }`}>
+                  <button 
+                    onClick={() => {
+                      if (feature.title === 'AI Chatbot') navigate('/ai')
+                      else if (feature.title === 'Scheduler') navigate('/scheduler')
+                      else if (feature.title === 'Diet Planner') navigate('/diet')
+                      else if (feature.title === 'Fitness Tracker') navigate('/fitness')
+                      else if (feature.title === 'Mood Tracker') navigate('/mood')
+                      else if (feature.title === 'Mentorship') navigate('/mentorship')
+                    }}
+                    className={`w-full text-sm font-semibold px-4 py-3 rounded-lg transition-all duration-200 ${
+                      isToggled 
+                        ? 'bg-gradient-to-r from-[#4A70A9] to-[#8FABD4] text-white hover:shadow-lg' 
+                        : 'bg-gradient-to-r from-[#8FABD4] to-[#4A70A9] text-white hover:shadow-lg'
+                    }`}>
                     Open Tool
                   </button>
                 </div>
@@ -297,44 +348,62 @@ const Dashboard = ({ setIsAuthenticated }) => {
             isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
           }`}>Recent Activity</h3>
           <div className="space-y-4">
-            <div className={`flex items-center p-4 rounded-lg ${
-              isToggled ? 'bg-[#4A70A9]/10' : 'bg-[#8FABD4]/10'
-            }`}>
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 ${
-                isToggled ? 'bg-[#4A70A9]' : 'bg-[#8FABD4]'
+            {recentActivities.length > 0 ? (
+              recentActivities.map((activity) => {
+                const getIcon = (type) => {
+                  switch(type) {
+                    case 'mentorship':
+                      return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                    case 'mood':
+                      return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    case 'fitness':
+                      return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    case 'diet':
+                      return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17M17 13v4a2 2 0 01-2 2H9a2 2 0 01-2-2v-4m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
+                    default:
+                      return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  }
+                }
+                
+                return (
+                  <div key={activity.id} className={`flex items-center justify-between p-4 rounded-lg ${
+                    isToggled ? 'bg-[#4A70A9]/10' : 'bg-[#8FABD4]/10'
+                  }`}>
+                    <div className="flex items-center">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 ${
+                        isToggled ? 'bg-[#4A70A9]' : 'bg-[#8FABD4]'
+                      }`}>
+                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          {getIcon(activity.type)}
+                        </svg>
+                      </div>
+                      <div>
+                        <p className={`font-semibold ${
+                          isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
+                        }`}>{activity.action}</p>
+                        <p className={`text-sm ${
+                          isToggled ? 'text-[#8FABD4]/70' : 'text-[#000000]/60'
+                        }`}>{activity.timestamp}</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => deleteActivity(activity.id)}
+                      className="text-red-500 hover:text-red-700 p-1 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                )
+              })
+            ) : (
+              <div className={`text-center py-8 ${
+                isToggled ? 'text-[#8FABD4]/70' : 'text-[#000000]/60'
               }`}>
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
+                <p>No recent activity yet. Start exploring your wellness tools!</p>
               </div>
-              <div>
-                <p className={`font-semibold ${
-                  isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
-                }`}>Mood logged: Happy</p>
-                <p className={`text-sm ${
-                  isToggled ? 'text-[#8FABD4]/70' : 'text-[#000000]/60'
-                }`}>2 hours ago</p>
-              </div>
-            </div>
-            <div className={`flex items-center p-4 rounded-lg ${
-              isToggled ? 'bg-[#4A70A9]/10' : 'bg-[#8FABD4]/10'
-            }`}>
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 ${
-                isToggled ? 'bg-[#4A70A9]' : 'bg-[#8FABD4]'
-              }`}>
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-              </div>
-              <div>
-                <p className={`font-semibold ${
-                  isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
-                }`}>Completed 30min workout</p>
-                <p className={`text-sm ${
-                  isToggled ? 'text-[#8FABD4]/70' : 'text-[#000000]/60'
-                }`}>Yesterday</p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -343,9 +412,23 @@ const Dashboard = ({ setIsAuthenticated }) => {
           <div className={`p-6 rounded-2xl shadow-lg transition-all duration-300 ${
             isToggled ? 'bg-[#000000]/60' : 'bg-white/80'
           }`}>
-            <div className={`text-3xl font-bold mb-2 ${
-              isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-            }`}>7</div>
+            <div className="flex items-center justify-between mb-2">
+              <div className={`text-3xl font-bold ${
+                isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
+              }`}>{stats.daysActive}</div>
+              <div className="flex gap-1">
+                <button onClick={() => updateStats('daysActive', true)} className="text-green-500 hover:text-green-700 p-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </button>
+                <button onClick={() => updateStats('daysActive', false)} className="text-red-500 hover:text-red-700 p-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 12H6" />
+                  </svg>
+                </button>
+              </div>
+            </div>
             <div className={`text-sm font-medium ${
               isToggled ? 'text-[#8FABD4]/80' : 'text-[#000000]/80'
             }`}>Days Active</div>
@@ -353,9 +436,23 @@ const Dashboard = ({ setIsAuthenticated }) => {
           <div className={`p-6 rounded-2xl shadow-lg transition-all duration-300 ${
             isToggled ? 'bg-[#000000]/60' : 'bg-white/80'
           }`}>
-            <div className={`text-3xl font-bold mb-2 ${
-              isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-            }`}>12</div>
+            <div className="flex items-center justify-between mb-2">
+              <div className={`text-3xl font-bold ${
+                isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
+              }`}>{stats.moodEntries}</div>
+              <div className="flex gap-1">
+                <button onClick={() => updateStats('moodEntries', true)} className="text-green-500 hover:text-green-700 p-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </button>
+                <button onClick={() => updateStats('moodEntries', false)} className="text-red-500 hover:text-red-700 p-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 12H6" />
+                  </svg>
+                </button>
+              </div>
+            </div>
             <div className={`text-sm font-medium ${
               isToggled ? 'text-[#8FABD4]/80' : 'text-[#000000]/80'
             }`}>Mood Entries</div>
@@ -363,9 +460,23 @@ const Dashboard = ({ setIsAuthenticated }) => {
           <div className={`p-6 rounded-2xl shadow-lg transition-all duration-300 ${
             isToggled ? 'bg-[#000000]/60' : 'bg-white/80'
           }`}>
-            <div className={`text-3xl font-bold mb-2 ${
-              isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-            }`}>3</div>
+            <div className="flex items-center justify-between mb-2">
+              <div className={`text-3xl font-bold ${
+                isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
+              }`}>{stats.goalsAchieved}</div>
+              <div className="flex gap-1">
+                <button onClick={() => updateStats('goalsAchieved', true)} className="text-green-500 hover:text-green-700 p-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </button>
+                <button onClick={() => updateStats('goalsAchieved', false)} className="text-red-500 hover:text-red-700 p-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 12H6" />
+                  </svg>
+                </button>
+              </div>
+            </div>
             <div className={`text-sm font-medium ${
               isToggled ? 'text-[#8FABD4]/80' : 'text-[#000000]/80'
             }`}>Goals Achieved</div>

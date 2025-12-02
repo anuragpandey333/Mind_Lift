@@ -125,9 +125,11 @@ const Login = ({ setIsAuthenticated }) => {
               'Sign In'
             )}
           </button>
+
+
         </form>
 
-        <div className="mt-8 text-center">
+        <div className="mt-6 text-center">
           <p className={`font-medium tracking-wide transition-all duration-300 ${
             isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
           }`}>
