@@ -18,7 +18,7 @@ const Login = ({ setIsAuthenticated }) => {
     setError('')
 
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'https://mind-lift-nine.vercel.app'}/api/auth/login`, formData)
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/login`, formData)
       localStorage.setItem('token', response.data.token)
       localStorage.setItem('user', JSON.stringify(response.data.user))
       localStorage.setItem('isNewUser', 'false')

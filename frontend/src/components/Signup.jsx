@@ -31,7 +31,7 @@ const Signup = ({ setIsAuthenticated }) => {
     }
 
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL || 'https://mind-lift-nine.vercel.app'}/api/auth/signup`, {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/signup`, {
         name: formData.name,
         email: formData.email,
         password: formData.password

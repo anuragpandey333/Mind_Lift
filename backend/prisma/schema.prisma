@@ -14,6 +14,10 @@ model User {
   email     String   @unique
   password  String
   role      String   @default("student")
+  profilePhoto String?
+  bio       String?
+  phone     String?
+  location  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   moodEntries MoodEntry[]

@@ -19,19 +19,54 @@ const Profile = () => {
   const [photoPreview, setPhotoPreview] = useState('')
 
   useEffect(() => {
+    const fetchUserData = async () => {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        navigate('/login')
+        return
+      }
+      
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          console.log('Fetched user data:', data)
+          const userData = data.user
+          
+          setUser(userData)
+          setFormData({
+            name: userData.name || '',
+            email: userData.email || '',
+            bio: userData.bio || '',
+            phone: userData.phone || '',
+            location: userData.location || '',
+            profilePhoto: userData.profilePhoto || ''
+          })
+          setPhotoPreview(userData.profilePhoto || '')
+          localStorage.setItem('user', JSON.stringify(userData))
+        } else {
+          console.error('Failed to fetch user data:', response.status)
+          if (response.status === 401) {
+            localStorage.removeItem('token')
+            localStorage.removeItem('user')
+            navigate('/login')
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error)
+      }
+    }
+    
+    fetchUserData()
+    
     const theme = localStorage.getItem('theme')
-    const userData = JSON.parse(localStorage.getItem('user') || '{}')
     setIsToggled(theme === 'dark')
-    setUser(userData)
-    setFormData({
-      name: userData.name || '',
-      email: userData.email || '',
-      bio: userData.bio || '',
-      phone: userData.phone || '',
-      location: userData.location || '',
-      profilePhoto: userData.profilePhoto || ''
-    })
-    setPhotoPreview(userData.profilePhoto || '')
   }, [])
 
   const toggleTheme = () => {
@@ -55,13 +90,44 @@ const Profile = () => {
 
   const handleSave = async () => {
     setLoading(true)
-    setTimeout(() => {
-      const updatedUser = { ...user, ...formData }
-      localStorage.setItem('user', JSON.stringify(updatedUser))
-      setUser(updatedUser)
-      setIsEditing(false)
-      setLoading(false)
-    }, 1000)
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
+      })
+      
+      const data = await response.json()
+      console.log('Profile update response:', data)
+      
+      if (response.ok) {
+        const updatedUser = data.user
+        localStorage.setItem('user', JSON.stringify(updatedUser))
+        setUser(updatedUser)
+        setFormData({
+          name: updatedUser.name || '',
+          email: updatedUser.email || '',
+          bio: updatedUser.bio || '',
+          phone: updatedUser.phone || '',
+          location: updatedUser.location || '',
+          profilePhoto: updatedUser.profilePhoto || ''
+        })
+        setPhotoPreview(updatedUser.profilePhoto || '')
+        setIsEditing(false)
+        alert('Profile updated successfully!')
+      } else {
+        console.error('Failed to update profile:', data.message)
+        alert('Failed to update profile: ' + data.message)
+      }
+    } catch (error) {
+      console.error('Error updating profile:', error)
+      alert('Error updating profile. Please try again.')
+    }
+    setLoading(false)
   }
 
   return (
@@ -152,16 +218,18 @@ const Profile = () => {
                 }`}>{formData.email}</p>
               </div>
               <div className="sm:ml-auto">
-                <button
-                  onClick={() => setIsEditing(!isEditing)}
-                  className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
-                    isToggled 
-                      ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/90 text-white' 
-                      : 'bg-[#8FABD4] hover:bg-[#8FABD4]/90 text-white'
-                  }`}
-                >
-                  {isEditing ? 'Cancel' : 'Edit Profile'}
-                </button>
+                {!isEditing && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
+                      isToggled 
+                        ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/90 text-white' 
+                        : 'bg-[#8FABD4] hover:bg-[#8FABD4]/90 text-white'
+                    }`}
+                  >
+                    Edit Profile
+                  </button>
+                )}
               </div>
             </div>
 
@@ -186,7 +254,7 @@ const Profile = () => {
               <div className="space-y-2">
                 <label className={`block text-sm font-semibold ${
                   isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
-                }`}>Email Address</label>
+                }`}>Email</label>
                 <input
                   type="email"
                   disabled={!isEditing}
@@ -212,9 +280,9 @@ const Profile = () => {
                       ? 'border-[#4A70A9]/30 focus:ring-[#4A70A9] bg-[#000000] text-[#8FABD4] placeholder-[#8FABD4]/60' 
                       : 'border-[#8FABD4]/30 focus:ring-[#8FABD4] bg-[#8FABD4]/10 text-[#000000] placeholder-[#000000]/70'
                   } ${!isEditing ? 'opacity-60' : ''}`}
-                  placeholder="Enter phone number"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="Enter your phone number"
                 />
               </div>
 
@@ -230,13 +298,13 @@ const Profile = () => {
                       ? 'border-[#4A70A9]/30 focus:ring-[#4A70A9] bg-[#000000] text-[#8FABD4] placeholder-[#8FABD4]/60' 
                       : 'border-[#8FABD4]/30 focus:ring-[#8FABD4] bg-[#8FABD4]/10 text-[#000000] placeholder-[#000000]/70'
                   } ${!isEditing ? 'opacity-60' : ''}`}
-                  placeholder="Enter your location"
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  placeholder="Enter your location"
                 />
               </div>
 
-              <div className="space-y-2 md:col-span-2">
+              <div className="md:col-span-2 space-y-2">
                 <label className={`block text-sm font-semibold ${
                   isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
                 }`}>Bio</label>
@@ -248,28 +316,49 @@ const Profile = () => {
                       ? 'border-[#4A70A9]/30 focus:ring-[#4A70A9] bg-[#000000] text-[#8FABD4] placeholder-[#8FABD4]/60' 
                       : 'border-[#8FABD4]/30 focus:ring-[#8FABD4] bg-[#8FABD4]/10 text-[#000000] placeholder-[#000000]/70'
                   } ${!isEditing ? 'opacity-60' : ''}`}
-                  placeholder="Tell us about yourself..."
                   value={formData.bio}
                   onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                  placeholder="Tell us about yourself..."
                 />
               </div>
-            </div>
 
-            {isEditing && (
-              <div className="mt-8 flex justify-end">
-                <button
-                  onClick={handleSave}
-                  disabled={loading}
-                  className={`px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 ${
-                    isToggled 
-                      ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/90 text-white' 
-                      : 'bg-[#8FABD4] hover:bg-[#8FABD4]/90 text-white'
-                  } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                >
-                  {loading ? 'Saving...' : 'Save Changes'}
-                </button>
-              </div>
-            )}
+              {isEditing && (
+                <div className="md:col-span-2 flex justify-end space-x-4">
+                  <button
+                    onClick={() => {
+                      setIsEditing(false)
+                      setFormData({
+                        name: user.name || '',
+                        email: user.email || '',
+                        bio: user.bio || '',
+                        phone: user.phone || '',
+                        location: user.location || '',
+                        profilePhoto: user.profilePhoto || ''
+                      })
+                      setPhotoPreview(user.profilePhoto || '')
+                    }}
+                    className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
+                      isToggled 
+                        ? 'bg-gray-600 hover:bg-gray-700 text-white' 
+                        : 'bg-gray-400 hover:bg-gray-500 text-white'
+                    }`}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    disabled={loading}
+                    className={`px-6 py-2 rounded-full font-medium transition-all duration-300 ${
+                      isToggled 
+                        ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/90 text-white' 
+                        : 'bg-[#8FABD4] hover:bg-[#8FABD4]/90 text-white'
+                    } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {loading ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -59,8 +59,21 @@ router.post('/login', async (req, res) => {
     // Test database connection
     await prisma.$connect()
 
-    // Find user
-    const user = await prisma.user.findUnique({ where: { email } })
+    // Find user with all profile data
+    const user = await prisma.user.findUnique({ 
+      where: { email },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        password: true,
+        role: true,
+        profilePhoto: true,
+        bio: true,
+        phone: true,
+        location: true
+      }
+    })
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' })
     }
@@ -81,22 +94,83 @@ router.post('/login', async (req, res) => {
         id: user.id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        profilePhoto: user.profilePhoto,
+        bio: user.bio,
+        phone: user.phone,
+        location: user.location
       }
     })
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message })
   }
 })
+// Get current user (me)
 router.get('/me', auth, async (req, res) => {
-  res.json({
-    user: {
-      id: req.user.id,
-      name: req.user.name,
-      email: req.user.email,
-      role: req.user.role
+  try {
+    console.log('Fetching user with ID:', req.user.id)
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        profilePhoto: true,
+        bio: true,
+        phone: true,
+        location: true
+      }
+    })
+    
+    console.log('Fetched user data:', user)
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
     }
-  })
+    
+    res.json({ user })
+  } catch (error) {
+    console.error('Error in /me route:', error)
+    res.status(500).json({ message: 'Server error', error: error.message })
+  }
+})
+
+
+
+// Update profile
+router.put('/profile', auth, async (req, res) => {
+  try {
+    const { name, email, profilePhoto, bio, phone, location } = req.body
+    
+    const updatedUser = await prisma.user.update({
+      where: { id: req.user.id },
+      data: {
+        name,
+        email,
+        profilePhoto,
+        bio,
+        phone,
+        location
+      }
+    })
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        profilePhoto: updatedUser.profilePhoto,
+        bio: updatedUser.bio,
+        phone: updatedUser.phone,
+        location: updatedUser.location
+      }
+    })
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message })
+  }
 })
 
 

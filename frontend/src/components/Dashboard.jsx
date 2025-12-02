@@ -28,15 +28,45 @@ const Dashboard = ({ setIsAuthenticated }) => {
   }
 
   useEffect(() => {
-    const userData = localStorage.getItem('user')
+    const fetchUserData = async () => {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        navigate('/login')
+        return
+      }
+      
+      try {
+        const response = await fetch('http://localhost:5001/api/auth/me', {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
+        
+        if (response.ok) {
+          const data = await response.json()
+          const userData = data.user
+          setUser(userData)
+          localStorage.setItem('user', JSON.stringify(userData))
+        } else {
+          if (response.status === 401) {
+            localStorage.removeItem('token')
+            localStorage.removeItem('user')
+            navigate('/login')
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error)
+      }
+    }
+    
+    fetchUserData()
+    
     const theme = localStorage.getItem('theme')
     const newUserFlag = localStorage.getItem('isNewUser')
     const activities = localStorage.getItem('recentActivities')
     const userStats = localStorage.getItem('userStats')
     
-    if (userData) {
-      setUser(JSON.parse(userData))
-    }
     setIsToggled(theme === 'dark')
     setIsNewUser(newUserFlag === 'true')
     setRecentActivities(activities ? JSON.parse(activities) : [])
@@ -336,8 +366,8 @@ const Dashboard = ({ setIsAuthenticated }) => {
               'Mood Tracker': './photo3.png',
               'Mentorship': './photo4.png',
               'Fitness Tracker': './photo5.png',
-              'Diet Planner': 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3',
-              'Scheduler': 'https://images.unsplash.com/photo-1611224923853-80b023f02d71?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3',
+              'Diet Planner': './photo3.png',
+              'Scheduler': './photo4.png',
               'AI Chatbot': './photo6.png'
             };
             

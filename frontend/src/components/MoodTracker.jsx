@@ -35,7 +35,7 @@ const MoodTracker = () => {
   const fetchMoodEntries = async () => {
     try {
       const token = localStorage.getItem('token')
-      const response = await axios.get('https://mind-lift-nine.vercel.app/api/mood', {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/mood`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setEntries(response.data)
@@ -62,7 +62,7 @@ const MoodTracker = () => {
       const moodEmoji = stressLevel <= 3 ? '😊' : stressLevel <= 5 ? '😐' : stressLevel <= 7 ? '😰' : '😫'
       
       const token = localStorage.getItem('token')
-      await axios.post('https://mind-lift-nine.vercel.app/api/mood', {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/mood`, {
         mood: moodLabel.toLowerCase(),
         moodLabel,
         moodEmoji,
@@ -115,7 +115,7 @@ const MoodTracker = () => {
   const deleteEntry = async (id) => {
     try {
       const token = localStorage.getItem('token')
-      await axios.delete(`https://mind-lift-nine.vercel.app/api/mood/${id}`, {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/api/mood/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       fetchMoodEntries()
