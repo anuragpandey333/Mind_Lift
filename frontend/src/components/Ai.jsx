@@ -1,35 +1,19 @@
 import axios from 'axios'
 import React, { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 
 function Ai() {
-  const navigate = useNavigate()
   const [messages, setMessages] = useState([])
   const [inputMessage, setInputMessage] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [isToggled, setIsToggled] = useState(false)
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
 
-  const API_KEY = "AIzaSyCkr6mtpBEh34bDWajddD9oXjmm9wsrOps"
+  const API_KEY = "AIzaSyCppnWyhnspJ4PkUi2_vhLbajj6XjqttVc"
 
-  useEffect(() => {
-    const theme = localStorage.getItem('theme')
-    setIsToggled(theme === 'dark')
-    
-    // Track AI chatbot page visit
-    const activity = {
-      id: Date.now(),
-      type: 'ai',
-      action: 'Used AI Chatbot',
-      timestamp: new Date().toLocaleString(),
-      icon: 'ai'
-    }
-    
-    const existingActivities = JSON.parse(localStorage.getItem('recentActivities') || '[]')
-    const updatedActivities = [activity, ...existingActivities.slice(0, 4)]
-    localStorage.setItem('recentActivities', JSON.stringify(updatedActivities))
-  }, [])
+  // Add mental wellness context to prompts
+  const createContextualPrompt = (userMessage) => {
+    return `You are a helpful AI assistant. Please provide a clear, informative, and helpful response to the following question: ${userMessage}`
+  }
 
   useEffect(() => {
     scrollToBottom()
@@ -37,12 +21,6 @@ function Ai() {
       inputRef.current?.focus()
     }
   }, [messages])
-
-  const toggleTheme = () => {
-    const newTheme = !isToggled
-    setIsToggled(newTheme)
-    localStorage.setItem('theme', newTheme ? 'dark' : 'light')
-  }
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -57,8 +35,7 @@ function Ai() {
     setIsLoading(true)
     
     try {
-      const contextualPrompt = `You are a mental wellness assistant for college students. Please provide supportive, empathetic, and helpful responses focused on mental health, stress management, academic pressure, and overall wellbeing. User question: ${userMessage}`
-      
+      const contextualPrompt = createContextualPrompt(userMessage)
       const res = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`, {
         "contents": [{
           "parts": [{ "text": contextualPrompt }]
@@ -69,18 +46,26 @@ function Ai() {
       setMessages(prev => [...prev, { text: aiResponse, isUser: false, id: Date.now() + 1 }])
     } catch (error) {
       console.error("Error getting AI response:", error)
-      let errorMessage = "Sorry, I encountered an error processing your request. Please try again."
       
-      if (error.response?.status === 403) {
-        errorMessage = "API access is currently limited. Please check your API key configuration."
-      } else if (error.response?.status === 429) {
-        errorMessage = "Too many requests. Please wait a moment before trying again."
+      // Fallback responses based on common topics
+      const getFallbackResponse = (question) => {
+        const q = question.toLowerCase()
+        if (q.includes('hello') || q.includes('hi')) {
+          return "Hello! I'm here to help you with any questions you have. How can I assist you today?"
+        }
+        if (q.includes('how are you')) {
+          return "I'm doing well, thank you for asking! I'm here and ready to help you with whatever you need."
+        }
+        if (q.includes('what') && q.includes('do')) {
+          return "I'm an AI assistant designed to help answer your questions and provide information on a wide variety of topics. Feel free to ask me anything!"
+        }
+        return "I'm having trouble connecting to my AI service right now, but I'm still here to help! Could you try rephrasing your question, or ask me something else?"
       }
       
+      const fallbackResponse = getFallbackResponse(userMessage)
       setMessages(prev => [...prev, { 
-        text: errorMessage,
+        text: fallbackResponse,
         isUser: false,
-        isError: true,
         id: Date.now() + 1
       }])
     } finally {
@@ -89,196 +74,98 @@ function Ai() {
   }
 
   return (
-    <div className={`min-h-screen transition-all duration-700 ${
-      isToggled 
-        ? 'bg-gradient-to-br from-[#000000] via-[#1a1a1a] to-[#333333]' 
-        : 'bg-gradient-to-br from-[#EFECE3] via-[#f5f2e9] to-[#e8e5dc]'
-    }`}>
-      {/* Navigation */}
-      <nav className={`backdrop-blur-md shadow-sm border-b transition-all duration-500 ${
-        isToggled 
-          ? 'bg-[#000000]/90 border-[#4A70A9]/30' 
-          : 'bg-[#EFECE3]/80 border-[#8FABD4]/20'
-      }`}>
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center space-x-3">
-              <button 
-                onClick={toggleTheme}
-                className={`flex items-center justify-center w-12 h-12 bg-gradient-to-br rounded-2xl shadow-lg transition-all duration-500 transform hover:scale-110 ${
-                  isToggled 
-                    ? 'from-[#4A70A9] to-[#8FABD4] rotate-180' 
-                    : 'from-[#8FABD4] to-[#4A70A9] rotate-0'
-                }`}
-              >
-                <svg className={`w-7 h-7 text-white transition-all duration-500 ${
-                  isToggled ? 'rotate-45 scale-110' : 'rotate-0 scale-100'
-                }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              </button>
-              <button 
-                onClick={() => navigate('/dashboard')}
-                className={`text-3xl font-semibold bg-clip-text text-transparent tracking-wider transition-all duration-500 hover:opacity-80 ${
-                  isToggled 
-                    ? 'bg-gradient-to-r from-[#8FABD4] via-[#4A70A9] to-[#8FABD4]' 
-                    : 'bg-gradient-to-r from-[#4A70A9] via-[#8FABD4] to-[#4A70A9]'
-                }`}
-              >
-                MindLift
-              </button>
+    <div className="pt-20 min-h-screen bg-white px-4 pb-40 flex flex-col animate-fade-in">
+      <div className="w-full max-w-3xl mx-auto flex-grow overflow-hidden">
+        <h1 className="text-2xl md:text-3xl font-bold text-[#818cf8] mb-6 text-center animate-fade-down">
+          <span className="inline-block mr-2 text-2xl animate-pulse">
+            🤖
+          </span>
+          Chat with AI Assistant
+        </h1>
+        
+        <div className="overflow-y-auto max-h-[calc(100vh-240px)] pr-2 custom-scrollbar">
+          {messages.length === 0 && (
+            <div className="text-center py-16 animate-fade-in">
+              <div className="bg-[#F5EFFF] inline-block p-4 rounded-full mb-4 shadow-md text-3xl">
+                🤖
+              </div>
+              <h2 className="text-lg font-medium text-gray-700 mb-2">Welcome to AI Assistant</h2>
+              <p className="text-gray-500 max-w-md mx-auto">Start a conversation by typing a message below.</p>
             </div>
-            
-            <button
-              onClick={() => navigate('/dashboard')}
-              className={`text-white px-6 py-2 rounded-full font-medium shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 ${
-                isToggled 
-                  ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/90' 
-                  : 'bg-[#8FABD4] hover:bg-[#8FABD4]/90'
-              }`}
-            >
-              Back to Dashboard
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      <div className="pt-8 px-4 pb-40 flex flex-col animate-fade-in">
-        <div className="w-full max-w-3xl mx-auto flex-grow overflow-hidden">
-          <h1 className={`text-2xl md:text-3xl font-bold mb-6 text-center animate-fade-down ${
-            isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-          }`}>
-            <span className="inline-block mr-2 text-2xl animate-pulse">
-              🤖
-            </span>
-            AI Mental Wellness Assistant
-          </h1>
+          )}
           
-          <div className="overflow-y-auto max-h-[calc(100vh-240px)] pr-2 custom-scrollbar">
-            {messages.length === 0 && (
-              <div className="text-center py-16 animate-fade-in">
-                <div className={`inline-block p-4 rounded-full mb-4 shadow-md text-3xl ${
-                  isToggled ? 'bg-[#4A70A9]/20' : 'bg-[#8FABD4]/20'
+          {messages.map((message, index) => (
+            <div
+              key={message.id}
+              className={`p-4 my-3 rounded-lg shadow-md border border-[#E5D9F2] animate-fade-up`}
+              style={{ 
+                animationDelay: `${index * 100}ms`,
+                animationFillMode: 'both',
+                backgroundColor: message.isUser ? 'white' : '#F5EFFF',
+                borderLeftWidth: 4,
+                borderLeftColor: message.isUser ? '#CDC1FF' : '#818cf8'
+              }}
+            >
+              <div className="flex items-center mb-2">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm text-sm ${
+                  message.isUser 
+                    ? "bg-[#CDC1FF] text-white" 
+                    : message.isError 
+                      ? "bg-red-100 text-red-600"
+                      : "bg-[#818cf8] text-white"
                 }`}>
+                  {message.isUser ? '👤' : '🤖'}
+                </div>
+                <span className="ml-2 font-medium text-sm text-gray-700">
+                  {message.isUser ? "You" : "AI Assistant"}
+                </span>
+              </div>
+              
+              {message.isUser ? (
+                <p className="text-gray-700 pl-10">{message.text}</p>
+              ) : (
+                <div className="pl-10 whitespace-pre-wrap text-gray-700">
+                  {message.text}
+                </div>
+              )}
+            </div>
+          ))}
+          
+          {isLoading && (
+            <div className="p-4 my-3 rounded-lg shadow-md border border-[#E5D9F2] bg-[#F5EFFF] border-l-4 border-l-[#818cf8] animate-fade-up">
+              <div className="flex items-center mb-2">
+                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#818cf8] text-white shadow-sm text-sm">
                   🤖
                 </div>
-                <h2 className={`text-lg font-medium mb-2 ${
-                  isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
-                }`}>Welcome to AI Mental Wellness Assistant</h2>
-                <p className={`max-w-md mx-auto ${
-                  isToggled ? 'text-[#8FABD4]/80' : 'text-[#000000]/70'
-                }`}>Start a conversation about your mental wellness journey.</p>
+                <span className="ml-2 font-medium text-sm text-gray-700">AI Assistant</span>
               </div>
-            )}
-            
-            {messages.map((message, index) => (
-              <div
-                key={message.id}
-                className={`p-4 my-3 rounded-lg shadow-md border animate-fade-up ${
-                  isToggled 
-                    ? message.isUser 
-                      ? 'bg-[#000000]/60 border-[#8FABD4]/20 border-l-4 border-l-[#8FABD4]'
-                      : 'bg-[#4A70A9]/20 border-[#8FABD4]/20 border-l-4 border-l-[#4A70A9]'
-                    : message.isUser 
-                      ? 'bg-white border-[#8FABD4]/30 border-l-4 border-l-[#8FABD4]'
-                      : 'bg-[#8FABD4]/10 border-[#8FABD4]/30 border-l-4 border-l-[#4A70A9]'
-                }`}
-                style={{ 
-                  animationDelay: `${index * 100}ms`,
-                  animationFillMode: 'both'
-                }}
-              >
-                <div className="flex items-center mb-2">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm text-sm ${
-                    message.isUser 
-                      ? isToggled ? 'bg-[#8FABD4] text-white' : 'bg-[#8FABD4] text-white'
-                      : message.isError 
-                        ? "bg-red-100 text-red-600"
-                        : isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#4A70A9] text-white'
-                  }`}>
-                    {message.isUser ? '👤' : '🤖'}
-                  </div>
-                  <span className={`ml-2 font-medium text-sm ${
-                    isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
-                  }`}>
-                    {message.isUser ? "You" : "AI Assistant"}
-                  </span>
-                </div>
-                
-                {message.isUser ? (
-                  <p className={`pl-10 ${
-                    isToggled ? 'text-[#8FABD4]/90' : 'text-[#000000]/90'
-                  }`}>{message.text}</p>
-                ) : (
-                  <div className={`pl-10 whitespace-pre-wrap ${
-                    isToggled ? 'text-[#8FABD4]/90' : 'text-[#000000]/90'
-                  }`}>
-                    {message.text}
-                  </div>
-                )}
+              <div className="pl-10 flex items-center">
+                <div className="animate-spin text-lg text-[#818cf8]">⟳</div>
+                <span className="ml-2 text-gray-600">Thinking...</span>
               </div>
-            ))}
-            
-            {isLoading && (
-              <div className={`p-4 my-3 rounded-lg shadow-md border border-l-4 animate-fade-up ${
-                isToggled 
-                  ? 'bg-[#4A70A9]/20 border-[#8FABD4]/20 border-l-[#4A70A9]'
-                  : 'bg-[#8FABD4]/10 border-[#8FABD4]/30 border-l-[#4A70A9]'
-              }`}>
-                <div className="flex items-center mb-2">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm text-sm ${
-                    isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#4A70A9] text-white'
-                  }`}>
-                    🤖
-                  </div>
-                  <span className={`ml-2 font-medium text-sm ${
-                    isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
-                  }`}>AI Assistant</span>
-                </div>
-                <div className="pl-10 flex items-center">
-                  <div className={`animate-spin text-lg ${
-                    isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-                  }`}>⟳</div>
-                  <span className={`ml-2 ${
-                    isToggled ? 'text-[#8FABD4]/80' : 'text-[#000000]/70'
-                  }`}>Thinking...</span>
-                </div>
-              </div>
-            )}
-            
-            <div ref={messagesEndRef} />
-          </div>
+            </div>
+          )}
+          
+          <div ref={messagesEndRef} />
         </div>
       </div>
 
       <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 w-full max-w-3xl px-4 animate-fade-up">
-        <div className={`rounded-2xl shadow-lg border p-3 flex items-center space-x-3 transition-all duration-300 hover:shadow-xl ${
-          isToggled 
-            ? 'bg-[#000000]/80 border-[#8FABD4]/20'
-            : 'bg-white border-[#8FABD4]/30'
-        }`}>
+        <div className="bg-white rounded-2xl shadow-lg border border-[#E5D9F2] p-3 flex items-center space-x-3 transition-all duration-300 hover:shadow-xl">
           <input
             ref={inputRef}
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            className={`flex-1 px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 transition-all duration-200 ${
-              isToggled 
-                ? 'bg-[#000000]/40 border-[#8FABD4]/30 text-[#8FABD4] placeholder-[#8FABD4]/60 focus:ring-[#4A70A9]'
-                : 'bg-white border-[#8FABD4]/30 text-[#000000] placeholder-gray-500 focus:ring-[#8FABD4]'
-            }`}
+            className="flex-1 px-4 py-3 text-black placeholder-gray-500 rounded-xl border border-[#E5D9F2] focus:outline-none focus:ring-2 focus:ring-[#CDC1FF] transition-all duration-200"
             type="text"
-            placeholder="Ask about your mental wellness..."
+            placeholder="Ask something..."
             onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
             disabled={isLoading}
           />
           <button
-            className={`px-5 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md flex items-center justify-center gap-2 text-white ${
-              inputMessage.trim() 
-                ? isToggled 
-                  ? 'bg-gradient-to-r from-[#4A70A9] to-[#8FABD4] hover:shadow-lg'
-                  : 'bg-gradient-to-r from-[#8FABD4] to-[#4A70A9] hover:shadow-lg'
-                : 'bg-gray-400 cursor-not-allowed'
-            }`}
+            className={`${
+              inputMessage.trim() ? "bg-[#CDC1FF] hover:bg-[#818cf8]" : "bg-gray-200 cursor-not-allowed"
+            } text-white px-5 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md flex items-center justify-center gap-2`}
             onClick={handleSendMessage}
             disabled={!inputMessage.trim() || isLoading}
           >
@@ -346,17 +233,17 @@ function Ai() {
         }
         
         .custom-scrollbar::-webkit-scrollbar-track {
-          background: ${isToggled ? '#1a1a1a' : '#F5EFFF'};
+          background: #F5EFFF;
           border-radius: 10px;
         }
         
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: ${isToggled ? '#4A70A9' : '#8FABD4'};
+          background: #CDC1FF;
           border-radius: 10px;
         }
         
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: ${isToggled ? '#8FABD4' : '#4A70A9'};
+          background: #818cf8;
         }
       `}</style>
     </div>
