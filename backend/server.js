@@ -9,14 +9,8 @@ const app = express()
 
 // Middleware
 app.use(cors({
-  origin: function (origin, callback) {
-    callback(null, true)
-  },
-  credentials: true,
+  origin:"*",
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  preflightContinue: false,
-  optionsSuccessStatus: 200
 }))
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ limit: '10mb', extended: true }))
