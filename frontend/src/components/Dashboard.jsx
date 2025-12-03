@@ -36,7 +36,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
       }
       
       try {
-        const response = await fetch('http://localhost:5001/api/auth/me', {
+        const response = await fetch('https://mind-lift-5tbx3n83c-anurag5.vercel.app/api/auth/me', {
           headers: { 
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
