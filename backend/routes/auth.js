@@ -12,6 +12,11 @@ router.post('/signup', async (req, res) => {
   try {
     const { name, email, password } = req.body
 
+    // Validate input
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'All fields are required' })
+    }
+
     // Test database connection
     await prisma.$connect()
 
@@ -55,6 +60,11 @@ router.post('/signup', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body
+
+    // Validate input
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' })
+    }
 
     // Test database connection
     await prisma.$connect()

@@ -16,12 +16,22 @@ prisma.$connect()
 
 const app = express()
 
-app.use(cors({
-  origin: ["https://mind-lift-28xy.vercel.app", "http://localhost:5173"],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}))
+// CORS middleware must be first
+app.use((req, res, next) => {
+  const allowedOrigins = ['https://mind-lift-28xy.vercel.app', 'http://localhost:5173']
+  const origin = req.headers.origin
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+  res.setHeader('Access-Control-Allow-Credentials', 'true')
+  
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200)
+  }
+  next()
+})
 
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ limit: '10mb', extended: true }))
@@ -39,3 +49,11 @@ app.use('/api/tasks', require('./routes/tasks'))
 
 // ✅ ONLY THIS FOR VERCEL
 module.exports = app
+
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+  const PORT = process.env.PORT || 5001
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`)
+  })
+}
