@@ -16,15 +16,11 @@ prisma.$connect()
 
 const app = express()
 
-// CORS configuration
-const corsOptions = {
-  origin: ['https://mind-lift-28xy.vercel.app', 'http://localhost:5173'],
-  credentials: true,
+app.use(cors({
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}
-
-app.use(cors(corsOptions))
+  credentials: true,
+}))
 
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ limit: '10mb', extended: true }))
