@@ -16,7 +16,20 @@ prisma.$connect()
 
 const app = express()
 
-// CORS middleware must be first
+// Handle OPTIONS requests first
+app.options('*', (req, res) => {
+  const allowedOrigins = ['https://mind-lift-28xy.vercel.app', 'http://localhost:5173']
+  const origin = req.headers.origin
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+  res.setHeader('Access-Control-Allow-Credentials', 'true')
+  res.status(200).end()
+})
+
+// CORS middleware for actual requests
 app.use((req, res, next) => {
   const allowedOrigins = ['https://mind-lift-28xy.vercel.app', 'http://localhost:5173']
   const origin = req.headers.origin
@@ -26,10 +39,6 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization')
   res.setHeader('Access-Control-Allow-Credentials', 'true')
-  
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200)
-  }
   next()
 })
 

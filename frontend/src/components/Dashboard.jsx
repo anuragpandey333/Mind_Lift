@@ -36,7 +36,7 @@ const Dashboard = ({ setIsAuthenticated }) => {
       }
       
       try {
-        const response = await fetch('https://mind-lift-5tbx3n83c-anurag5.vercel.app/api/auth/me', {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
           headers: { 
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -57,6 +57,11 @@ const Dashboard = ({ setIsAuthenticated }) => {
         }
       } catch (error) {
         console.error('Error fetching user data:', error)
+        // Fallback to localStorage user data
+        const storedUser = localStorage.getItem('user')
+        if (storedUser) {
+          setUser(JSON.parse(storedUser))
+        }
       }
     }
     
