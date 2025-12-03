@@ -33,6 +33,7 @@ const Scheduler = () => {
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/tasks`, {
         headers: { Authorization: `Bearer ${token}` }
       })
+      console.log('Fetched tasks:', response.data)
       setTasks(response.data || [])
     } catch (error) {
       console.error('Error fetching tasks:', error)
@@ -100,8 +101,20 @@ const Scheduler = () => {
     }
   }
 
-  const todayTasks = tasks.filter(task => task.dueDate === new Date().toISOString().split('T')[0])
-  const upcomingTasks = tasks.filter(task => task.dueDate > new Date().toISOString().split('T')[0])
+  const today = new Date().toISOString().split('T')[0]
+  const todayTasks = tasks.filter(task => {
+    if (!task.dueDate) return false
+    const taskDate = new Date(task.dueDate).toISOString().split('T')[0]
+    console.log('Comparing dates:', { taskDate, today, match: taskDate === today, task: task.title })
+    return taskDate === today
+  })
+  
+  console.log('Today tasks:', todayTasks)
+  const upcomingTasks = tasks.filter(task => {
+    if (!task.dueDate) return false
+    const taskDate = new Date(task.dueDate).toISOString().split('T')[0]
+    return taskDate > today
+  })
   const completedTasks = tasks.filter(task => task.completed)
 
   const getPriorityColor = (priority) => {
