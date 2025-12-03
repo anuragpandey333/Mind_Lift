@@ -2,20 +2,10 @@ const express = require('express')
 const cors = require('cors')
 require('dotenv').config()
 
-const prisma = require('./lib/prisma')
-const authRoutes = require('./routes/auth')
-const dietRoutes = require('./routes/diet')
-
-// Database connection
-prisma.$connect()
-  .then(() => console.log('Database connected successfully'))
-  .catch(err => {
-    console.error('Database connection failed:', err)
-    process.exit(1)
-  })
-
 const app = express()
 
+// CORS first
+app.use(cors())
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*')
   res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS')
@@ -27,27 +17,38 @@ app.use((req, res, next) => {
   next()
 })
 
-app.use(express.json({ limit: '10mb' }))
-app.use(express.urlencoded({ limit: '10mb', extended: true }))
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
-// Routes
+// Test route
 app.get('/', (req, res) => {
-  res.send('Welcome to the API')
+  res.json({ message: 'MindLift API is running' })
 })
 
-app.use('/api/auth', authRoutes)
-app.use('/api/diet', dietRoutes)
-app.use('/api/mood', require('./routes/mood'))
-app.use('/api/fitness', require('./routes/fitness'))
-app.use('/api/tasks', require('./routes/tasks'))
+// Auth routes
+try {
+  const authRoutes = require('./routes/auth')
+  app.use('/api/auth', authRoutes)
+} catch (error) {
+  console.error('Auth routes error:', error)
+}
 
-// ✅ ONLY THIS FOR VERCEL
+// Other routes
+try {
+  app.use('/api/diet', require('./routes/diet'))
+  app.use('/api/mood', require('./routes/mood'))
+  app.use('/api/fitness', require('./routes/fitness'))
+  app.use('/api/tasks', require('./routes/tasks'))
+} catch (error) {
+  console.error('Routes error:', error)
+}
+
 module.exports = app
 
 // For local development
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 5001
   app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`)
+    console.log(`Server running on http://localhost:${PORT}`)
   })
 }
