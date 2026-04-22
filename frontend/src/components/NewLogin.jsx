@@ -43,7 +43,7 @@ const NewLogin = ({ setIsAuthenticated }) => {
       if (err.code === 'ERR_NETWORK') {
         setError('Cannot connect to server. Make sure backend is running on localhost:5001')
       } else {
-        setError(err.response?.data?.message || 'Login failed')
+        setError(err.response?.data?.message || 'Login failed. Please check your credentials.')
       }
     } finally {
       setLoading(false)

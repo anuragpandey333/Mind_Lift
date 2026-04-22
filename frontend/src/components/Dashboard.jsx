@@ -6,28 +6,8 @@ const Dashboard = ({ setIsAuthenticated }) => {
   const [user, setUser] = useState(null)
   const [isToggled, setIsToggled] = useState(false)
   const [isNewUser, setIsNewUser] = useState(false)
-  const [recentActivities, setRecentActivities] = useState([])
-  const [stats, setStats] = useState({ daysActive: 0, moodEntries: 0, goalsAchieved: 0 })
+  const [stats, setStats] = useState({ daysActive: 0 })
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-
-  const addActivity = (type, action) => {
-    const activity = {
-      id: Date.now(),
-      type,
-      action,
-      timestamp: new Date().toLocaleString()
-    }
-    const existing = JSON.parse(localStorage.getItem('recentActivities') || '[]')
-    const updated = [activity, ...existing].slice(0, 10)
-    localStorage.setItem('recentActivities', JSON.stringify(updated))
-    setRecentActivities(updated)
-  }
-
-  const deleteActivity = (activityId) => {
-    const updatedActivities = recentActivities.filter(activity => activity.id !== activityId)
-    setRecentActivities(updatedActivities)
-    localStorage.setItem('recentActivities', JSON.stringify(updatedActivities))
-  }
 
   const updateStats = (type, increment = true) => {
     const newStats = { ...stats }
@@ -82,13 +62,11 @@ const Dashboard = ({ setIsAuthenticated }) => {
     
     const theme = localStorage.getItem('theme')
     const newUserFlag = localStorage.getItem('isNewUser')
-    const activities = localStorage.getItem('recentActivities')
     const userStats = localStorage.getItem('userStats')
     
     setIsToggled(theme === 'dark')
     setIsNewUser(newUserFlag === 'true')
-    setRecentActivities(activities ? JSON.parse(activities) : [])
-    setStats(userStats ? JSON.parse(userStats) : { daysActive: 7, moodEntries: 12, goalsAchieved: 3 })
+    setStats(userStats ? JSON.parse(userStats) : { daysActive: 0 })
   }, [])
 
   useEffect(() => {
@@ -423,12 +401,12 @@ const Dashboard = ({ setIsAuthenticated }) => {
                   }`}>{feature.description}</p>
                   <button 
                     onClick={() => {
-                      if (feature.title === 'AI Chatbot') { addActivity('ai', 'Used AI Chatbot'); navigate('/ai') }
-                      else if (feature.title === 'Scheduler') { addActivity('scheduler', 'Opened Scheduler'); navigate('/scheduler') }
-                      else if (feature.title === 'Diet Planner') { addActivity('diet', 'Checked Diet Planner'); navigate('/diet') }
-                      else if (feature.title === 'Fitness Tracker') { addActivity('fitness', 'Opened Fitness Tracker'); navigate('/fitness') }
-                      else if (feature.title === 'Mood Tracker') { addActivity('mood', 'Logged Mood'); navigate('/mood') }
-                      else if (feature.title === 'Mentorship') { addActivity('mentorship', 'Visited Mentorship'); navigate('/mentorship') }
+                      if (feature.title === 'AI Chatbot') navigate('/ai')
+                      else if (feature.title === 'Scheduler') navigate('/scheduler')
+                      else if (feature.title === 'Diet Planner') navigate('/diet')
+                      else if (feature.title === 'Fitness Tracker') navigate('/fitness')
+                      else if (feature.title === 'Mood Tracker') navigate('/mood')
+                      else if (feature.title === 'Mentorship') navigate('/mentorship')
                     }}
                     className={`w-full text-sm font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl ${
                       isToggled 
