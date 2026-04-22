@@ -10,6 +10,19 @@ const Dashboard = ({ setIsAuthenticated }) => {
   const [stats, setStats] = useState({ daysActive: 0, moodEntries: 0, goalsAchieved: 0 })
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
+  const addActivity = (type, action) => {
+    const activity = {
+      id: Date.now(),
+      type,
+      action,
+      timestamp: new Date().toLocaleString()
+    }
+    const existing = JSON.parse(localStorage.getItem('recentActivities') || '[]')
+    const updated = [activity, ...existing].slice(0, 10)
+    localStorage.setItem('recentActivities', JSON.stringify(updated))
+    setRecentActivities(updated)
+  }
+
   const deleteActivity = (activityId) => {
     const updatedActivities = recentActivities.filter(activity => activity.id !== activityId)
     setRecentActivities(updatedActivities)
@@ -410,12 +423,12 @@ const Dashboard = ({ setIsAuthenticated }) => {
                   }`}>{feature.description}</p>
                   <button 
                     onClick={() => {
-                      if (feature.title === 'AI Chatbot') navigate('/ai')
-                      else if (feature.title === 'Scheduler') navigate('/scheduler')
-                      else if (feature.title === 'Diet Planner') navigate('/diet')
-                      else if (feature.title === 'Fitness Tracker') navigate('/fitness')
-                      else if (feature.title === 'Mood Tracker') navigate('/mood')
-                      else if (feature.title === 'Mentorship') navigate('/mentorship')
+                      if (feature.title === 'AI Chatbot') { addActivity('ai', 'Used AI Chatbot'); navigate('/ai') }
+                      else if (feature.title === 'Scheduler') { addActivity('scheduler', 'Opened Scheduler'); navigate('/scheduler') }
+                      else if (feature.title === 'Diet Planner') { addActivity('diet', 'Checked Diet Planner'); navigate('/diet') }
+                      else if (feature.title === 'Fitness Tracker') { addActivity('fitness', 'Opened Fitness Tracker'); navigate('/fitness') }
+                      else if (feature.title === 'Mood Tracker') { addActivity('mood', 'Logged Mood'); navigate('/mood') }
+                      else if (feature.title === 'Mentorship') { addActivity('mentorship', 'Visited Mentorship'); navigate('/mentorship') }
                     }}
                     className={`w-full text-sm font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl ${
                       isToggled 
@@ -430,147 +443,112 @@ const Dashboard = ({ setIsAuthenticated }) => {
           })}
         </div>
 
-        {/* Recent Activity */}
-        <div className={`mt-8 sm:mt-12 p-4 sm:p-6 rounded-2xl shadow-lg ${
-          isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
-        }`}>
-          <h3 className={`text-lg sm:text-xl font-bold mb-4 sm:mb-6 ${
-            isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
-          }`}>Recent Activity</h3>
-          <div className="space-y-4">
-            {recentActivities.length > 0 ? (
-              recentActivities.map((activity) => {
-                const getIcon = (type) => {
-                  switch(type) {
-                    case 'mentorship':
-                      return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                    case 'mood':
-                      return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                    case 'fitness':
-                      return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    case 'diet':
-                      return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17M17 13v4a2 2 0 01-2 2H9a2 2 0 01-2-2v-4m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
-                    default:
-                      return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  }
-                }
-                
-                return (
-                  <div key={activity.id} className={`flex items-center justify-between p-4 rounded-lg ${
-                    isToggled ? 'bg-[#4A70A9]/10' : 'bg-[#8FABD4]/10'
-                  }`}>
-                    <div className="flex items-center">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-4 ${
-                        isToggled ? 'bg-[#4A70A9]' : 'bg-[#8FABD4]'
-                      }`}>
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          {getIcon(activity.type)}
-                        </svg>
-                      </div>
-                      <div>
-                        <p className={`font-semibold ${
-                          isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
-                        }`}>{activity.action}</p>
-                        <p className={`text-sm ${
-                          isToggled ? 'text-[#8FABD4]/70' : 'text-[#000000]/60'
-                        }`}>{activity.timestamp}</p>
-                      </div>
+
+
+        {/* Days Active Tracker */}
+        <div className="mt-8 sm:mt-12 rounded-3xl shadow-lg overflow-hidden" style={{ background: isToggled ? '#1a1a1a' : '#ffffff', border: isToggled ? '1px solid #333' : '1px solid #e5e7eb' }}>
+
+          {/* Header */}
+          <div className="p-6 sm:p-8" style={{ background: isToggled ? '#111' : '#f9fafb', borderBottom: isToggled ? '1px solid #333' : '1px solid #e5e7eb' }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-2xl font-bold" style={{ color: isToggled ? '#ffffff' : '#111827' }}>Days Active Tracker</h3>
+                <p className="text-sm mt-1" style={{ color: isToggled ? '#9ca3af' : '#6b7280' }}>
+                  {stats.daysActive >= 30 ? '🏆 Legendary!' : stats.daysActive >= 14 ? ' Amazing!' : stats.daysActive >= 7 ? ' On fire!' : stats.daysActive >= 3 ? '💪 Building momentum!' : '🌱 Start your journey!'}
+                </p>
+              </div>
+              <div className="text-center px-6 py-4 rounded-2xl" style={{ background: isToggled ? '#222' : '#ffffff', border: isToggled ? '1px solid #444' : '1px solid #e5e7eb' }}>
+                <p className="text-5xl font-bold" style={{ color: isToggled ? '#ffffff' : '#111827' }}>{stats.daysActive}</p>
+                <p className="text-xs uppercase tracking-widest" style={{ color: isToggled ? '#9ca3af' : '#6b7280' }}>Days</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 sm:p-8">
+            {/* Calendar Grid */}
+            <div className="mb-8">
+              <div className="grid grid-cols-7 gap-1.5 mb-2">
+                {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d, i) => (
+                  <div key={i} className="text-center text-[10px] font-semibold uppercase" style={{ color: isToggled ? '#6b7280' : '#9ca3af' }}>{d}</div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 gap-1.5">
+                {[...Array(35)].map((_, i) => {
+                  const dayNum = 35 - i
+                  const isActive = dayNum <= stats.daysActive
+                  const isToday = dayNum === stats.daysActive
+                  return (
+                    <div key={i}
+                      className={`aspect-square rounded-lg flex items-center justify-center text-sm font-semibold transition-all duration-300 ${isToday ? 'scale-110 z-10 relative' : ''}`}
+                      style={{
+                        background: isToday
+                          ? isToggled ? '#ffffff' : '#111827'
+                          : isActive
+                            ? isToggled ? '#333333' : '#e5e7eb'
+                            : isToggled ? '#222222' : '#f9fafb',
+                        border: isToday
+                          ? isToggled ? '2px solid #ffffff' : '2px solid #111827'
+                          : isActive
+                            ? isToggled ? '1px solid #444' : '1px solid #d1d5db'
+                            : isToggled ? '1px solid #2a2a2a' : '1px solid #f3f4f6'
+                      }}>
+                      <span style={{ color: isToday ? (isToggled ? '#111827' : '#ffffff') : isActive ? (isToggled ? '#ffffff' : '#374151') : isToggled ? '#444' : '#d1d5db' }}>
+                        {isToday ? '●' : isActive ? '✓' : ''}
+                      </span>
                     </div>
-                    <button 
-                      onClick={() => deleteActivity(activity.id)}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-all duration-200 flex-shrink-0"
-                      title="Delete activity"
-                    >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Milestones */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              {[
+                { days: 3, emoji: '', label: '3 Days' },
+                { days: 7, emoji: '', label: '1 Week' },
+                { days: 14, emoji: '', label: '2 Weeks' },
+                { days: 30, emoji: '', label: '1 Month' }
+              ].map(({ days, emoji, label }) => {
+                const achieved = stats.daysActive >= days
+                return (
+                  <div key={days}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300"
+                    style={{
+                      background: achieved ? (isToggled ? '#333' : '#111827') : isToggled ? '#222' : '#f3f4f6',
+                      color: achieved ? (isToggled ? '#ffffff' : '#ffffff') : isToggled ? '#555' : '#9ca3af',
+                      border: achieved ? 'none' : isToggled ? '1px solid #333' : '1px solid #e5e7eb'
+                    }}>
+                    <span>{achieved ? emoji : ''}</span>
+                    <span>{label}</span>
                   </div>
                 )
-              })
-            ) : (
-              <div className={`text-center py-8 ${
-                isToggled ? 'text-[#8FABD4]/70' : 'text-[#000000]/60'
-              }`}>
-                <p>No recent activity yet. Start exploring your wellness tools!</p>
-              </div>
-            )}
-          </div>
-        </div>
+              })}
+            </div>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mt-8 sm:mt-12">
-          <div className={`p-6 rounded-2xl shadow-lg transition-all duration-300 ${
-            isToggled ? 'bg-[#000000]/60' : 'bg-white/80'
-          }`}>
-            <div className="flex items-center justify-between mb-2">
-              <div className={`text-3xl font-bold ${
-                isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-              }`}>{stats.daysActive}</div>
-              <div className="flex gap-1">
-                <button onClick={() => updateStats('daysActive', true)} className="text-green-500 hover:text-green-700 p-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                </button>
-                <button onClick={() => updateStats('daysActive', false)} className="text-red-500 hover:text-red-700 p-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 12H6" />
-                  </svg>
-                </button>
+            {/* Progress Bar */}
+            <div className="mb-6">
+              <div className="flex justify-between text-xs font-semibold mb-2">
+                <span style={{ color: isToggled ? '#6b7280' : '#9ca3af' }}>Progress to 30 days</span>
+                <span style={{ color: isToggled ? '#ffffff' : '#111827' }}>{Math.min(stats.daysActive, 30)}/30</span>
+              </div>
+              <div className="w-full h-4 rounded-full overflow-hidden" style={{ background: isToggled ? '#222' : '#f3f4f6', border: isToggled ? '1px solid #333' : '1px solid #e5e7eb' }}>
+                <div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.min((stats.daysActive / 30) * 100, 100)}%`, background: isToggled ? '#ffffff' : '#111827' }} />
               </div>
             </div>
-            <div className={`text-sm font-medium ${
-              isToggled ? 'text-[#8FABD4]/80' : 'text-[#000000]/80'
-            }`}>Days Active</div>
-          </div>
-          <div className={`p-6 rounded-2xl shadow-lg transition-all duration-300 ${
-            isToggled ? 'bg-[#000000]/60' : 'bg-white/80'
-          }`}>
-            <div className="flex items-center justify-between mb-2">
-              <div className={`text-3xl font-bold ${
-                isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-              }`}>{stats.moodEntries}</div>
-              <div className="flex gap-1">
-                <button onClick={() => updateStats('moodEntries', true)} className="text-green-500 hover:text-green-700 p-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                </button>
-                <button onClick={() => updateStats('moodEntries', false)} className="text-red-500 hover:text-red-700 p-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 12H6" />
-                  </svg>
-                </button>
-              </div>
+
+            {/* Buttons */}
+            <div className="flex gap-3">
+              <button onClick={() => updateStats('daysActive', true)}
+                className="flex-1 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:opacity-90"
+                style={{ background: isToggled ? '#ffffff' : '#111827', color: isToggled ? '#111827' : '#ffffff' }}>
+                Mark Today Active
+              </button>
+              <button onClick={() => updateStats('daysActive', false)}
+                className="px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:opacity-80"
+                style={{ background: 'transparent', color: isToggled ? '#9ca3af' : '#6b7280', border: isToggled ? '1px solid #444' : '1px solid #d1d5db' }}>
+                Undo
+              </button>
             </div>
-            <div className={`text-sm font-medium ${
-              isToggled ? 'text-[#8FABD4]/80' : 'text-[#000000]/80'
-            }`}>Mood Entries</div>
-          </div>
-          <div className={`p-6 rounded-2xl shadow-lg transition-all duration-300 ${
-            isToggled ? 'bg-[#000000]/60' : 'bg-white/80'
-          }`}>
-            <div className="flex items-center justify-between mb-2">
-              <div className={`text-3xl font-bold ${
-                isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-              }`}>{stats.goalsAchieved}</div>
-              <div className="flex gap-1">
-                <button onClick={() => updateStats('goalsAchieved', true)} className="text-green-500 hover:text-green-700 p-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                  </svg>
-                </button>
-                <button onClick={() => updateStats('goalsAchieved', false)} className="text-red-500 hover:text-red-700 p-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 12H6" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            <div className={`text-sm font-medium ${
-              isToggled ? 'text-[#8FABD4]/80' : 'text-[#000000]/80'
-            }`}>Goals Achieved</div>
           </div>
         </div>
       </div>

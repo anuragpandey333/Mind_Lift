@@ -25,12 +25,26 @@ const NewLogin = ({ setIsAuthenticated }) => {
     setError('')
 
     try {
+      console.log('Attempting login with:', formData.email)
+      console.log('API URL:', import.meta.env.VITE_API_URL)
+      
       const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/login`, formData)
+      console.log('Login successful:', response.data)
+      
       localStorage.setItem('token', response.data.token)
       localStorage.setItem('user', JSON.stringify(response.data.user))
+      localStorage.setItem('isNewUser', 'false')
       setIsAuthenticated(true)
+      
+      // Navigate to dashboard
+      window.location.href = '/dashboard'
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed')
+      console.error('Login error:', err)
+      if (err.code === 'ERR_NETWORK') {
+        setError('Cannot connect to server. Make sure backend is running on localhost:5001')
+      } else {
+        setError(err.response?.data?.message || 'Login failed')
+      }
     } finally {
       setLoading(false)
     }

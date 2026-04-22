@@ -92,6 +92,13 @@ const Profile = () => {
     setLoading(true)
     try {
       const token = localStorage.getItem('token')
+      console.log('Sending profile update:', formData)
+      console.log('API URL:', import.meta.env.VITE_API_URL)
+      
+      // Test if API is reachable
+      const testResponse = await fetch(`${import.meta.env.VITE_API_URL}/`)
+      console.log('API test response:', testResponse.status)
+      
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/profile`, {
         method: 'PUT',
         headers: {
@@ -101,8 +108,20 @@ const Profile = () => {
         body: JSON.stringify(formData)
       })
       
-      const data = await response.json()
-      console.log('Profile update response:', data)
+      console.log('Response status:', response.status)
+      console.log('Response headers:', response.headers.get('content-type'))
+      
+      const responseText = await response.text()
+      console.log('Raw response:', responseText)
+      
+      let data
+      try {
+        data = JSON.parse(responseText)
+      } catch (parseError) {
+        console.error('JSON parse error:', parseError)
+        alert('Server returned invalid response. Make sure backend is running on localhost:5001')
+        return
+      }
       
       if (response.ok) {
         const updatedUser = data.user
@@ -120,12 +139,16 @@ const Profile = () => {
         setIsEditing(false)
         alert('Profile updated successfully!')
       } else {
-        console.error('Failed to update profile:', data.message)
-        alert('Failed to update profile: ' + data.message)
+        console.error('Failed to update profile:', response.status, data)
+        alert(`Failed to update profile: ${data.message || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Error updating profile:', error)
-      alert('Error updating profile. Please try again.')
+      if (error.message.includes('fetch')) {
+        alert('Cannot connect to server. Please make sure the backend is running on localhost:5001')
+      } else {
+        alert(`Network error: ${error.message}`)
+      }
     }
     setLoading(false)
   }

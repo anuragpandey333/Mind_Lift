@@ -1,6 +1,66 @@
 import axios from 'axios'
 import React, { useState, useRef, useEffect } from 'react'
 
+const API_KEY = "AIzaSyBFPyxs7mwID2ANscz-vKfH8eYl9rcH4fY"
+
+const getLocalResponse = (userMessage) => {
+  const q = userMessage.toLowerCase()
+
+  if (q.includes('hello') || q.includes('hi') || q.includes('hey'))
+    return "Hello! 👋 I'm your AI Assistant. How can I help you today?"
+
+  if (q.includes('how are you'))
+    return "I'm doing great, thank you! I'm here to help you with anything. 😊"
+
+  if (q.includes('joke'))
+    return "Why do programmers prefer dark mode? 😄\n\nBecause light attracts bugs! 🐛"
+
+  if (q.includes('dsa') || q.includes('data structure') || q.includes('algorithm'))
+    return "DSA (Data Structures & Algorithms) covers:\n\n• Arrays, Linked Lists, Stacks, Queues\n• Trees (Binary, BST, AVL)\n• Graphs (BFS, DFS)\n• Sorting: Bubble, Merge, Quick Sort\n• Dynamic Programming\n• Hash Tables\n\nStart with arrays and linked lists, then move to trees and graphs. Practice on LeetCode!"
+
+  if (q.includes('react'))
+    return "React key concepts:\n\n• Components (functional & class)\n• JSX syntax\n• Props & State\n• Hooks (useState, useEffect, useContext)\n• React Router for navigation\n• Context API for state management\n\nBuild small projects to practice!"
+
+  if (q.includes('javascript') || q.includes(' js '))
+    return "JavaScript key concepts:\n\n• Variables: var, let, const\n• Functions & Arrow functions\n• Promises & Async/Await\n• DOM manipulation\n• ES6+ features (destructuring, spread)\n• Closures & Prototypes\n\nPractice on freeCodeCamp or JavaScript.info!"
+
+  if (q.includes('python'))
+    return "Python key topics:\n\n• Variables, loops, functions\n• Lists, tuples, dictionaries\n• OOP (classes, inheritance)\n• File handling\n• Libraries: NumPy, Pandas, Flask\n\nStart with Python.org tutorials!"
+
+  if (q.includes('stress') || q.includes('anxiety') || q.includes('mental health') || q.includes('burnout'))
+    return "I hear you. Mental wellness matters! 💙\n\nHelpful strategies:\n• Deep breathing (4-7-8 technique)\n• Break tasks into smaller steps\n• Pomodoro: 25 min work, 5 min break\n• Regular exercise and sleep\n• Talk to someone you trust\n• Limit social media\n\nYou're doing great! 🌟"
+
+  if (q.includes('study') || q.includes('exam') || q.includes('learn'))
+    return "Proven study strategies:\n\n• Active recall over passive reading\n• Spaced repetition (review after 1, 3, 7 days)\n• Pomodoro technique\n• Teach concepts to others\n• Practice with past papers\n• Stay consistent - daily beats cramming\n\nYou've got this! 💪"
+
+  if (q.includes('sleep'))
+    return "Tips for better sleep:\n\n• Maintain a consistent sleep schedule\n• Avoid screens 1 hour before bed\n• Keep your room cool and dark\n• Limit caffeine after 2 PM\n• Try deep breathing before sleep\n• Aim for 7-9 hours per night"
+
+  if (q.includes('fitness') || q.includes('exercise') || q.includes('workout'))
+    return "Fitness tips:\n\n• Start with 30 min of exercise daily\n• Mix cardio and strength training\n• Stay hydrated (8 glasses/day)\n• Warm up before and cool down after\n• Rest days are important for recovery\n• Track your progress for motivation"
+
+  if (q.includes('diet') || q.includes('food') || q.includes('nutrition'))
+    return "Healthy eating tips:\n\n• Eat balanced meals (protein, carbs, fats)\n• Include fruits and vegetables daily\n• Avoid processed foods\n• Don't skip breakfast\n• Eat smaller, frequent meals\n• Stay hydrated throughout the day"
+
+  if (q.includes('thank'))
+    return "You're welcome! 😊 Feel free to ask anything else!"
+
+  if (q.includes('bye') || q.includes('goodbye'))
+    return "Goodbye! Take care and come back anytime! 👋"
+
+  if (q.includes('what is') || q.includes('explain') || q.includes('define')) {
+    const topic = userMessage.replace(/what is|explain|define/gi, '').trim()
+    return `Here's an overview of "${topic}":\n\n• This is an important concept worth understanding deeply\n• Start with official documentation or tutorials\n• Practice with hands-on examples\n• Join communities like Reddit or Discord for help\n\nWould you like more specific information about ${topic}?`
+  }
+
+  if (q.includes('how to') || q.includes('how do')) {
+    const task = userMessage.replace(/how to|how do i|how do you/gi, '').trim()
+    return `Here's how to ${task}:\n\n1. Understand the basics first\n2. Break it into smaller steps\n3. Find good resources (docs, tutorials)\n4. Practice with real examples\n5. Review and improve\n\nWant me to go deeper on any specific step?`
+  }
+
+  return `You asked: "${userMessage}"\n\nHere's what I can suggest:\n• Break your question into smaller parts\n• Search for official documentation\n• Try hands-on practice\n• Ask more specific questions for better answers\n\nFeel free to ask me about coding, health, study tips, or anything else! 😊`
+}
+
 function Ai() {
   const [messages, setMessages] = useState([])
   const [inputMessage, setInputMessage] = useState("")
@@ -8,243 +68,129 @@ function Ai() {
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
 
-  const API_KEY = "AIzaSyCppnWyhnspJ4PkUi2_vhLbajj6XjqttVc"
-
-  // Add mental wellness context to prompts
-  const createContextualPrompt = (userMessage) => {
-    return `You are a helpful AI assistant. Please provide a clear, informative, and helpful response to the following question: ${userMessage}`
-  }
-
   useEffect(() => {
-    scrollToBottom()
-    if (messages.length === 0) {
-      inputRef.current?.focus()
-    }
-  }, [messages])
-
-  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
+  }, [messages, isLoading])
 
   async function handleSendMessage() {
-    if (!inputMessage.trim()) return
-    
+    if (!inputMessage.trim() || isLoading) return
+
     const userMessage = inputMessage.trim()
-    setMessages(prev => [...prev, { text: userMessage, isUser: true, id: Date.now() }])
+    const updatedMessages = [...messages, { text: userMessage, isUser: true, id: Date.now() }]
+    setMessages(updatedMessages)
     setInputMessage("")
     setIsLoading(true)
-    
+
+    const contents = updatedMessages.map((msg) => ({
+      role: msg.isUser ? "user" : "model",
+      parts: [{ text: msg.text }],
+    }))
+
     try {
-      const contextualPrompt = createContextualPrompt(userMessage)
-      const res = await axios.post(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`, {
-        "contents": [{
-          "parts": [{ "text": contextualPrompt }]
-        }]
-      })
-      
-      const aiResponse = res.data?.candidates?.[0]?.content?.parts?.[0]?.text || "I'm sorry, I couldn't generate a response. Please try again."
-      setMessages(prev => [...prev, { text: aiResponse, isUser: false, id: Date.now() + 1 }])
+      const res = await axios.post(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,
+        { contents },
+        { headers: { 'Content-Type': 'application/json' } }
+      )
+      const aiResponse = res.data?.candidates?.[0]?.content?.parts?.[0]?.text || "I couldn't generate a response."
+      setMessages((prev) => [...prev, { text: aiResponse, isUser: false, id: Date.now() + 1 }])
     } catch (error) {
-      console.error("Error getting AI response:", error)
-      
-      // Fallback responses based on common topics
-      const getFallbackResponse = (question) => {
-        const q = question.toLowerCase()
-        if (q.includes('hello') || q.includes('hi')) {
-          return "Hello! I'm here to help you with any questions you have. How can I assist you today?"
-        }
-        if (q.includes('how are you')) {
-          return "I'm doing well, thank you for asking! I'm here and ready to help you with whatever you need."
-        }
-        if (q.includes('what') && q.includes('do')) {
-          return "I'm an AI assistant designed to help answer your questions and provide information on a wide variety of topics. Feel free to ask me anything!"
-        }
-        return "I'm having trouble connecting to my AI service right now, but I'm still here to help! Could you try rephrasing your question, or ask me something else?"
-      }
-      
-      const fallbackResponse = getFallbackResponse(userMessage)
-      setMessages(prev => [...prev, { 
-        text: fallbackResponse,
-        isUser: false,
-        id: Date.now() + 1
-      }])
+      const localResponse = getLocalResponse(userMessage)
+      setMessages((prev) => [...prev, { text: localResponse, isUser: false, id: Date.now() + 1 }])
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="pt-20 min-h-screen bg-white px-4 pb-40 flex flex-col animate-fade-in">
+    <div className="pt-20 min-h-screen bg-white px-4 pb-40 flex flex-col">
       <div className="w-full max-w-3xl mx-auto flex-grow overflow-hidden">
-        <h1 className="text-2xl md:text-3xl font-bold text-[#818cf8] mb-6 text-center animate-fade-down">
-          <span className="inline-block mr-2 text-2xl animate-pulse">
-            🤖
-          </span>
-          Chat with AI Assistant
+        <h1 className="text-2xl md:text-3xl font-bold text-[#818cf8] mb-6 text-center">
+          🤖 AI Assistant
         </h1>
-        
+
         <div className="overflow-y-auto max-h-[calc(100vh-240px)] pr-2 custom-scrollbar">
           {messages.length === 0 && (
-            <div className="text-center py-16 animate-fade-in">
-              <div className="bg-[#F5EFFF] inline-block p-4 rounded-full mb-4 shadow-md text-3xl">
-                🤖
-              </div>
+            <div className="text-center py-16">
+              <div className="bg-[#F5EFFF] inline-block p-4 rounded-full mb-4 shadow-md text-4xl">🤖</div>
               <h2 className="text-lg font-medium text-gray-700 mb-2">Welcome to AI Assistant</h2>
-              <p className="text-gray-500 max-w-md mx-auto">Start a conversation by typing a message below.</p>
+              <p className="text-gray-500 max-w-md mx-auto">Ask me anything — coding, health, study tips, or just chat!</p>
             </div>
           )}
-          
-          {messages.map((message, index) => (
+
+          {messages.map((message) => (
             <div
               key={message.id}
-              className={`p-4 my-3 rounded-lg shadow-md border border-[#E5D9F2] animate-fade-up`}
-              style={{ 
-                animationDelay: `${index * 100}ms`,
-                animationFillMode: 'both',
+              className="p-4 my-3 rounded-lg shadow-md border border-[#E5D9F2]"
+              style={{
                 backgroundColor: message.isUser ? 'white' : '#F5EFFF',
                 borderLeftWidth: 4,
                 borderLeftColor: message.isUser ? '#CDC1FF' : '#818cf8'
               }}
             >
               <div className="flex items-center mb-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm text-sm ${
-                  message.isUser 
-                    ? "bg-[#CDC1FF] text-white" 
-                    : message.isError 
-                      ? "bg-red-100 text-red-600"
-                      : "bg-[#818cf8] text-white"
-                }`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm text-sm ${message.isUser ? "bg-[#CDC1FF]" : "bg-[#818cf8]"} text-white`}>
                   {message.isUser ? '👤' : '🤖'}
                 </div>
                 <span className="ml-2 font-medium text-sm text-gray-700">
                   {message.isUser ? "You" : "AI Assistant"}
                 </span>
               </div>
-              
-              {message.isUser ? (
-                <p className="text-gray-700 pl-10">{message.text}</p>
-              ) : (
-                <div className="pl-10 whitespace-pre-wrap text-gray-700">
-                  {message.text}
-                </div>
-              )}
+              <div className="pl-10 whitespace-pre-wrap text-gray-700">{message.text}</div>
             </div>
           ))}
-          
+
           {isLoading && (
-            <div className="p-4 my-3 rounded-lg shadow-md border border-[#E5D9F2] bg-[#F5EFFF] border-l-4 border-l-[#818cf8] animate-fade-up">
+            <div className="p-4 my-3 rounded-lg shadow-md border border-[#E5D9F2] bg-[#F5EFFF]"
+              style={{ borderLeftWidth: 4, borderLeftColor: '#818cf8' }}>
               <div className="flex items-center mb-2">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#818cf8] text-white shadow-sm text-sm">
-                  🤖
-                </div>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#818cf8] text-white text-sm">🤖</div>
                 <span className="ml-2 font-medium text-sm text-gray-700">AI Assistant</span>
               </div>
-              <div className="pl-10 flex items-center">
-                <div className="animate-spin text-lg text-[#818cf8]">⟳</div>
-                <span className="ml-2 text-gray-600">Thinking...</span>
+              <div className="pl-10 flex items-center gap-1">
+                <div className="w-2 h-2 bg-[#818cf8] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-2 h-2 bg-[#818cf8] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                <div className="w-2 h-2 bg-[#818cf8] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
               </div>
             </div>
           )}
-          
+
           <div ref={messagesEndRef} />
         </div>
       </div>
 
-      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 w-full max-w-3xl px-4 animate-fade-up">
-        <div className="bg-white rounded-2xl shadow-lg border border-[#E5D9F2] p-3 flex items-center space-x-3 transition-all duration-300 hover:shadow-xl">
+      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 w-full max-w-3xl px-4">
+        <div className="bg-white rounded-2xl shadow-lg border border-[#E5D9F2] p-3 flex items-center space-x-3">
           <input
             ref={inputRef}
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            className="flex-1 px-4 py-3 text-black placeholder-gray-500 rounded-xl border border-[#E5D9F2] focus:outline-none focus:ring-2 focus:ring-[#CDC1FF] transition-all duration-200"
+            className="flex-1 px-4 py-3 text-black placeholder-gray-500 rounded-xl border border-[#E5D9F2] focus:outline-none focus:ring-2 focus:ring-[#CDC1FF]"
             type="text"
             placeholder="Ask something..."
-            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
+            onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSendMessage()}
             disabled={isLoading}
           />
           <button
-            className={`${
-              inputMessage.trim() ? "bg-[#CDC1FF] hover:bg-[#818cf8]" : "bg-gray-200 cursor-not-allowed"
-            } text-white px-5 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-md flex items-center justify-center gap-2`}
+            className={`${inputMessage.trim() && !isLoading ? "bg-[#818cf8] hover:bg-[#6d75e8]" : "bg-gray-200 cursor-not-allowed"} text-white px-5 py-3 rounded-xl font-medium transition-all duration-200 shadow-md`}
             onClick={handleSendMessage}
             disabled={!inputMessage.trim() || isLoading}
           >
-            {isLoading ? (
-              <div className="animate-spin text-lg">⟳</div>
-            ) : (
-              <div className="animate-pulse-subtle text-lg">➤</div>
-            )}
+            ➤
           </button>
         </div>
       </div>
 
-      <style jsx>{`
-        @keyframes fade-in {
-          from { opacity: 0; }
-          to { opacity: 1; }
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #F5EFFF; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #CDC1FF; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #818cf8; }
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-5px); }
         }
-        
-        @keyframes fade-down {
-          from { opacity: 0; transform: translateY(-20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes fade-up {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .animate-fade-in {
-          animation: fade-in 0.5s ease-out;
-        }
-        
-        .animate-fade-down {
-          animation: fade-down 0.5s ease-out;
-        }
-        
-        .animate-fade-up {
-          animation: fade-up 0.5s ease-out;
-        }
-        
-        .animate-pulse {
-          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        
-        @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.7; }
-        }
-        
-        .animate-pulse-subtle {
-          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        
-        .animate-spin {
-          animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: #F5EFFF;
-          border-radius: 10px;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #CDC1FF;
-          border-radius: 10px;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #818cf8;
-        }
+        .animate-bounce { animation: bounce 0.8s infinite; }
       `}</style>
     </div>
   )

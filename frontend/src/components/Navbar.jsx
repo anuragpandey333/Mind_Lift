@@ -98,7 +98,7 @@ const Navbar = ({ isToggled, toggleTheme, isAuthenticated }) => {
                       : 'bg-[#8FABD4] hover:bg-[#8FABD4]/90'
                   }`}
                 >
-                  🚀 Start Learning
+                   Start Learning
                 </button>
               </>
             )}
