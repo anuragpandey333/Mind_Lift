@@ -1,21 +1,54 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+const navItems = [
+  {
+    label: 'Mood Tracker', path: '/mood', emoji: '😊',
+    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+  },
+  {
+    label: 'Fitness', path: '/fitness', emoji: '💪',
+    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+  },
+  {
+    label: 'Diet', path: '/diet', emoji: '🥗',
+    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17M17 13v4a2 2 0 01-2 2H9a2 2 0 01-2-2v-4" />
+  },
+  {
+    label: 'Scheduler', path: '/scheduler', emoji: '📅',
+    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+  },
+  {
+    label: 'Mentorship', path: '/mentorship', emoji: '🎓',
+    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197" />
+  },
+  {
+    label: 'AI Chatbot', path: '/ai', emoji: '🤖',
+    icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+  },
+]
+
+const features = [
+  { title: 'Mood Tracker', path: '/mood', emoji: '😊', desc: 'Track your daily emotions', color: 'bg-pink-50 border-pink-200', iconColor: 'text-pink-500' },
+  { title: 'Fitness', path: '/fitness', emoji: '💪', desc: 'Monitor your workouts', color: 'bg-orange-50 border-orange-200', iconColor: 'text-orange-500' },
+  { title: 'Diet', path: '/diet', emoji: '🥗', desc: 'Personalized meal plans', color: 'bg-green-50 border-green-200', iconColor: 'text-green-500' },
+  { title: 'Scheduler', path: '/scheduler', emoji: '📅', desc: 'Organize your day', color: 'bg-blue-50 border-blue-200', iconColor: 'text-blue-500' },
+  { title: 'Mentorship', path: '/mentorship', emoji: '🎓', desc: 'Connect with mentors', color: 'bg-purple-50 border-purple-200', iconColor: 'text-purple-500' },
+  { title: 'AI Chatbot', path: '/ai', emoji: '🤖', desc: '24/7 wellness support', color: 'bg-indigo-50 border-indigo-200', iconColor: 'text-indigo-500' },
+]
+
 const Dashboard = ({ setIsAuthenticated }) => {
   const navigate = useNavigate()
   const [user, setUser] = useState(null)
   const [isToggled, setIsToggled] = useState(false)
   const [isNewUser, setIsNewUser] = useState(false)
   const [stats, setStats] = useState({ daysActive: 0 })
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [activeNav, setActiveNav] = useState('')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const updateStats = (type, increment = true) => {
     const newStats = { ...stats }
-    if (increment) {
-      newStats[type] += 1
-    } else {
-      newStats[type] = Math.max(0, newStats[type] - 1)
-    }
+    newStats[type] = increment ? newStats[type] + 1 : Math.max(0, newStats[type] - 1)
     setStats(newStats)
     localStorage.setItem('userStats', JSON.stringify(newStats))
   }
@@ -23,66 +56,43 @@ const Dashboard = ({ setIsAuthenticated }) => {
   useEffect(() => {
     const fetchUserData = async () => {
       const token = localStorage.getItem('token')
-      if (!token) {
-        navigate('/login')
-        return
-      }
-      
+      if (!token) { navigate('/login'); return }
       try {
         const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
         })
-        
         if (response.ok) {
           const data = await response.json()
-          const userData = data.user
-          setUser(userData)
-          localStorage.setItem('user', JSON.stringify(userData))
-        } else {
-          if (response.status === 401) {
-            localStorage.removeItem('token')
-            localStorage.removeItem('user')
-            navigate('/login')
-          }
+          setUser(data.user)
+          localStorage.setItem('user', JSON.stringify(data.user))
+        } else if (response.status === 401) {
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
+          navigate('/login')
         }
-      } catch (error) {
-        console.error('Error fetching user data:', error)
-        // Fallback to localStorage user data
+      } catch {
         const storedUser = localStorage.getItem('user')
-        if (storedUser) {
-          setUser(JSON.parse(storedUser))
-        }
+        if (storedUser) setUser(JSON.parse(storedUser))
       }
     }
-    
     fetchUserData()
-    
-    const theme = localStorage.getItem('theme')
-    const newUserFlag = localStorage.getItem('isNewUser')
+    setIsToggled(localStorage.getItem('theme') === 'dark')
+    setIsNewUser(localStorage.getItem('isNewUser') === 'true')
     const userStats = localStorage.getItem('userStats')
-    
-    setIsToggled(theme === 'dark')
-    setIsNewUser(newUserFlag === 'true')
     setStats(userStats ? JSON.parse(userStats) : { daysActive: 0 })
   }, [])
 
   useEffect(() => {
-    // Clear the flag after component has rendered with the message
     if (isNewUser) {
-      const timer = setTimeout(() => {
-        localStorage.removeItem('isNewUser')
-      }, 100)
-      return () => clearTimeout(timer)
+      const t = setTimeout(() => localStorage.removeItem('isNewUser'), 100)
+      return () => clearTimeout(t)
     }
   }, [isNewUser])
 
   const toggleTheme = () => {
-    const newTheme = !isToggled
-    setIsToggled(newTheme)
-    localStorage.setItem('theme', newTheme ? 'dark' : 'light')
+    const next = !isToggled
+    setIsToggled(next)
+    localStorage.setItem('theme', next ? 'dark' : 'light')
   }
 
   const handleLogout = () => {
@@ -91,444 +101,241 @@ const Dashboard = ({ setIsAuthenticated }) => {
     setIsAuthenticated(false)
   }
 
-  const features = [
-    {
-      title: "Mood Tracker",
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-        </svg>
-      ),
-      description: "Track your daily emotions and mental state",
-      color: "#FCD8CD",
-      bgColor: "bg-pink-50"
-    },
-    {
-      title: "Mentorship",
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-        </svg>
-      ),
-      description: "Connect with verified mental health mentors",
-      color: "#FEEBF6",
-      bgColor: "bg-blue-50"
-    },
-    {
-      title: "Fitness Tracker",
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-      ),
-      description: "Monitor your physical wellness and activities",
-      color: "#EBD6FB",
-      bgColor: "bg-green-50"
-    },
-    {
-      title: "Diet Planner",
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17M17 13v4a2 2 0 01-2 2H9a2 2 0 01-2-2v-4m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
-        </svg>
-      ),
-      description: "Personalized nutrition for better mental health",
-      color: "#687FE5",
-      bgColor: "bg-orange-50"
-    },
-    {
-      title: "Scheduler",
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      ),
-      description: "Organize tasks and manage your daily routine",
-      color: "#FCD8CD",
-      bgColor: "bg-violet-50"
-    },
-    {
-      title: "AI Chatbot",
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-        </svg>
-      ),
-      description: "24/7 AI support for mental wellness guidance",
-      color: "#FEEBF6",
-      bgColor: "bg-teal-50"
-    }
-  ]
+  const handleNav = (path) => {
+    setActiveNav(path)
+    setSidebarOpen(false)
+    navigate(path)
+  }
+
+  const bg = isToggled ? '#0f1117' : '#f5f6fa'
+  const sidebar = isToggled ? '#1a1d27' : '#ffffff'
+  const border = isToggled ? '#2a2d3a' : '#e8eaf0'
+  const text = isToggled ? '#e2e8f0' : '#1a202c'
+  const subtext = isToggled ? '#94a3b8' : '#64748b'
+  const hover = isToggled ? '#252836' : '#f1f5f9'
+  const activeColor = isToggled ? '#3b82f6' : '#4A70A9'
 
   return (
-    <div className={`min-h-screen transition-all duration-700 ${
-      isToggled 
-        ? 'bg-gradient-to-br from-[#000000] via-[#1a1a1a] to-[#333333]' 
-        : 'bg-gradient-to-br from-[#EFECE3] via-[#f5f2e9] to-[#e8e5dc]'
-    }`}>
-      {/* Navigation */}
-      <nav className={`backdrop-blur-md shadow-sm border-b transition-all duration-500 ${
-        isToggled 
-          ? 'bg-[#000000]/90 border-[#4A70A9]/30' 
-          : 'bg-[#EFECE3]/80 border-[#8FABD4]/20'
-      }`}>
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
-          <div className="flex justify-between items-center h-20">
-            <div className="flex items-center space-x-3">
-              <button 
-                onClick={toggleTheme}
-                className={`flex items-center justify-center w-12 h-12 bg-gradient-to-br rounded-2xl shadow-lg transition-all duration-500 transform hover:scale-110 ${
-                  isToggled 
-                    ? 'from-[#4A70A9] to-[#8FABD4] rotate-180' 
-                    : 'from-[#8FABD4] to-[#4A70A9] rotate-0'
-                }`}
-              >
-                <svg className={`w-7 h-7 text-white transition-all duration-500 ${
-                  isToggled ? 'rotate-45 scale-110' : 'rotate-0 scale-100'
-                }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              </button>
-              <button 
-                onClick={() => navigate('/')}
-                className={`text-3xl font-semibold bg-clip-text text-transparent tracking-wider transition-all duration-500 hover:opacity-80 ${
-                  isToggled 
-                    ? 'bg-gradient-to-r from-[#8FABD4] via-[#4A70A9] to-[#8FABD4]' 
-                    : 'bg-gradient-to-r from-[#4A70A9] via-[#8FABD4] to-[#4A70A9]'
-                }`}
-              >
-                MindLift
-              </button>
-            </div>
-            
-            <div className="hidden md:flex items-center space-x-8">
-              <button onClick={() => navigate('/features')} className={`font-semibold text-sm tracking-wide transition-all duration-300 hover:scale-105 ${
-                isToggled 
-                  ? 'text-[#8FABD4] hover:text-[#4A70A9]' 
-                  : 'text-[#4A70A9] hover:text-[#8FABD4]'
-              }`}>Features</button>
-              <button onClick={() => navigate('/about')} className={`font-semibold text-sm tracking-wide transition-all duration-300 hover:scale-105 ${
-                isToggled 
-                  ? 'text-[#8FABD4] hover:text-[#4A70A9]' 
-                  : 'text-[#4A70A9] hover:text-[#8FABD4]'
-              }`}>About</button>
-              <button onClick={() => navigate('/contact')} className={`font-semibold text-sm tracking-wide transition-all duration-300 hover:scale-105 ${
-                isToggled 
-                  ? 'text-[#8FABD4] hover:text-[#4A70A9]' 
-                  : 'text-[#4A70A9] hover:text-[#8FABD4]'
-              }`}>Contact</button>
-            </div>
-            
-            <button 
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg"
-            >
-              <svg className={`w-6 h-6 ${
-                isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-              }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
-            
-            <div className="flex items-center space-x-4">
-              {user && (
-                <div className="flex items-center space-x-3">
-                  <button
-                    onClick={() => navigate('/profile')}
-                    className={`flex items-center space-x-3 px-4 py-2 rounded-full transition-all duration-300 hover:scale-105 ${
-                      isToggled ? 'bg-[#4A70A9]/20 hover:bg-[#4A70A9]/30' : 'bg-[#8FABD4]/10 hover:bg-[#8FABD4]/20'
-                    }`}
-                  >
-                    {user.profilePhoto ? (
-                      <img 
-                        src={user.profilePhoto} 
-                        alt="Profile" 
-                        className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
-                      />
-                    ) : (
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-white ${
-                        isToggled ? 'bg-[#4A70A9]' : 'bg-[#8FABD4]'
-                      }`}>
-                        {user.name.charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                    <div className="hidden sm:block">
-                      <p className={`font-semibold text-sm ${
-                        isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-                      }`}>{user.name}</p>
-                      <p className={`text-xs ${
-                        isToggled ? 'text-[#8FABD4]/70' : 'text-[#4A70A9]/70'
-                      }`}>{user.email}</p>
-                    </div>
-                  </button>
-                  <button
-                    onClick={handleLogout}
-                    className={`text-white px-3 sm:px-4 py-2 rounded-full font-medium shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 text-sm ${
-                      isToggled 
-                        ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/90' 
-                        : 'bg-[#8FABD4] hover:bg-[#8FABD4]/90'
-                    }`}
-                  >
-                    <span className="hidden sm:inline">Logout</span>
-                    <span className="sm:hidden">Exit</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className={`md:hidden border-t transition-all duration-300 ${
-            isToggled 
-              ? 'bg-[#000000]/90 border-[#4A70A9]/30' 
-              : 'bg-[#EFECE3]/80 border-[#8FABD4]/20'
-          }`}>
-            <div className="px-4 py-4 space-y-4">
-              <button 
-                onClick={() => { navigate('/features'); setIsMobileMenuOpen(false); }}
-                className={`block w-full text-left font-medium transition-colors ${
-                  isToggled 
-                    ? 'text-[#8FABD4] hover:text-[#4A70A9]' 
-                    : 'text-[#4A70A9] hover:text-[#8FABD4]'
-                }`}
-              >
-                Features
-              </button>
-              <button 
-                onClick={() => { navigate('/about'); setIsMobileMenuOpen(false); }}
-                className={`block w-full text-left font-medium transition-colors ${
-                  isToggled 
-                    ? 'text-[#8FABD4] hover:text-[#4A70A9]' 
-                    : 'text-[#4A70A9] hover:text-[#8FABD4]'
-                }`}
-              >
-                About
-              </button>
-              <button 
-                onClick={() => { navigate('/contact'); setIsMobileMenuOpen(false); }}
-                className={`block w-full text-left font-medium transition-colors ${
-                  isToggled 
-                    ? 'text-[#8FABD4] hover:text-[#4A70A9]' 
-                    : 'text-[#4A70A9] hover:text-[#8FABD4]'
-                }`}
-              >
-                Contact
-              </button>
-            </div>
-          </div>
-        )}
-      </nav>
+    <div className="flex h-screen overflow-hidden" style={{ background: bg, color: text }}>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-        {/* Hero Section */}
-        <div className="text-center mb-12">
-          <div className="flex justify-center mb-6">
+      {/* Mobile overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-20 bg-black/40 md:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed md:static z-30 h-full flex flex-col transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
+        style={{ width: 260, background: sidebar, borderRight: `1px solid ${border}` }}
+      >
+        {/* Logo */}
+        <div className="flex items-center gap-3 px-6 py-5" style={{ borderBottom: `1px solid ${border}` }}>
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-sm" style={{ background: activeColor }}>M</div>
+          <span className="text-lg font-bold" style={{ color: text }}>MindLift</span>
+          <button onClick={toggleTheme} className="ml-auto p-1.5 rounded-lg transition-colors" style={{ background: hover }}>
+            <span className="text-sm">{isToggled ? '☀️' : '🌙'}</span>
+          </button>
+        </div>
+
+        {/* Profile */}
+        <div className="px-4 py-5" style={{ borderBottom: `1px solid ${border}` }}>
+          <div className="flex items-center gap-3 p-3 rounded-2xl cursor-pointer transition-colors" style={{ background: hover }} onClick={() => navigate('/profile')}>
             {user?.profilePhoto ? (
-              <img 
-                src={user.profilePhoto} 
-                alt="Profile" 
-                className="w-20 h-20 rounded-full object-cover border-4 border-white shadow-lg"
-              />
+              <img src={user.profilePhoto} alt="Profile" className="w-11 h-11 rounded-full object-cover" />
             ) : (
-              <div className={`w-20 h-20 rounded-full flex items-center justify-center text-2xl font-bold text-white ${
-                isToggled ? 'bg-[#4A70A9]' : 'bg-[#8FABD4]'
-              }`}>
+              <div className="w-11 h-11 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0" style={{ background: activeColor }}>
                 {user?.name?.charAt(0).toUpperCase() || 'U'}
               </div>
             )}
+            <div className="overflow-hidden">
+              <p className="font-semibold text-sm truncate" style={{ color: text }}>{user?.name || 'User'}</p>
+              <p className="text-xs truncate" style={{ color: subtext }}>{user?.email || ''}</p>
+            </div>
           </div>
-          <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-4 transition-all duration-500 ${
-            isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
-          }`}>
-            {isNewUser ? 'Welcome' : 'Welcome back'}, {user?.name || 'Friend'}!
-          </h2>
-          <p className={`text-base sm:text-lg max-w-2xl mx-auto mb-6 sm:mb-8 transition-all duration-500 ${
-            isToggled ? 'text-[#8FABD4]/80' : 'text-[#000000]/80'
-          }`}>
-            Ready to continue your wellness journey? Let's make today amazing!
-          </p>
         </div>
 
-        {/* Feature Cards */}
-        <h3 className={`text-xl sm:text-2xl font-bold mb-6 sm:mb-8 text-center ${
-          isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
-        }`}>Your Wellness Tools</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {features.map((feature, index) => {
-            const featureImages = {
-              'Mood Tracker': './photo3.png',
-              'Mentorship': './photo4.png',
-              'Fitness Tracker': './photo5.png',
-              'Diet Planner': './photo11.png',
-              'Scheduler': './photo12.png',
-              'AI Chatbot': './photo6.png'
-            };
-            
+        {/* Nav Links */}
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-wider px-3 mb-3" style={{ color: subtext }}>Menu</p>
+          {navItems.map((item) => {
+            const isActive = activeNav === item.path
             return (
-              <div
-                key={index}
-                className={`group rounded-2xl shadow-xl border hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer overflow-hidden ${
-                  isToggled 
-                    ? 'bg-[#000000]/60 border-[#8FABD4]/20' 
-                    : 'bg-white/90 border-[#8FABD4]/30'
-                }`}
+              <button
+                key={item.path}
+                onClick={() => handleNav(item.path)}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 text-left"
+                style={{
+                  background: isActive ? `${activeColor}18` : 'transparent',
+                  color: isActive ? activeColor : subtext,
+                  borderLeft: isActive ? `3px solid ${activeColor}` : '3px solid transparent'
+                }}
               >
-                <div className="relative h-48 overflow-hidden">
-                  <img 
-                    src={featureImages[feature.title]} 
-                    alt={feature.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className={`absolute inset-0 ${
-                    isToggled 
-                      ? 'bg-gradient-to-t from-[#000000]/60 to-transparent' 
-                      : 'bg-gradient-to-t from-[#000000]/30 to-transparent'
-                  }`}></div>
-                  <div className={`absolute top-4 left-4 inline-flex items-center justify-center w-12 h-12 rounded-xl shadow-lg ${feature.color === '#687FE5' ? 'text-white' : 'text-gray-700'}`} style={{backgroundColor: feature.color}}>
-                    {feature.icon}
-                  </div>
-                </div>
-                
-                <div className="p-4 sm:p-6">
-                  <h3 className={`text-lg sm:text-xl font-bold tracking-tight mb-2 sm:mb-3 ${
-                    isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
-                  }`}>{feature.title}</h3>
-                  <p className={`text-sm leading-relaxed mb-3 sm:mb-4 ${
-                    isToggled ? 'text-[#8FABD4]/80' : 'text-[#000000]/80'
-                  }`}>{feature.description}</p>
-                  <button 
-                    onClick={() => {
-                      if (feature.title === 'AI Chatbot') navigate('/ai')
-                      else if (feature.title === 'Scheduler') navigate('/scheduler')
-                      else if (feature.title === 'Diet Planner') navigate('/diet')
-                      else if (feature.title === 'Fitness Tracker') navigate('/fitness')
-                      else if (feature.title === 'Mood Tracker') navigate('/mood')
-                      else if (feature.title === 'Mentorship') navigate('/mentorship')
-                    }}
-                    className={`w-full text-sm font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl ${
-                      isToggled 
-                        ? 'bg-gradient-to-r from-[#4A70A9] to-[#8FABD4] text-white' 
-                        : 'bg-gradient-to-r from-[#8FABD4] to-[#4A70A9] text-white'
-                    }`}>
-                    Get Started
-                  </button>
-                </div>
-              </div>
-            );
+                <span className="text-base">{item.emoji}</span>
+                <span>{item.label}</span>
+                {isActive && <span className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: activeColor }} />}
+              </button>
+            )
           })}
+        </nav>
+
+        {/* Logout */}
+        <div className="px-3 py-4" style={{ borderTop: `1px solid ${border}` }}>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200"
+            style={{ color: '#ef4444', background: 'transparent' }}
+            onMouseEnter={e => e.currentTarget.style.background = '#fee2e2'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            Logout
+          </button>
         </div>
+      </aside>
 
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
 
-
-        {/* Days Active Tracker */}
-        <div className="mt-8 sm:mt-12 rounded-3xl shadow-lg overflow-hidden" style={{ background: isToggled ? '#1a1a1a' : '#ffffff', border: isToggled ? '1px solid #333' : '1px solid #e5e7eb' }}>
-
-          {/* Header */}
-          <div className="p-6 sm:p-8" style={{ background: isToggled ? '#111' : '#f9fafb', borderBottom: isToggled ? '1px solid #333' : '1px solid #e5e7eb' }}>
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-2xl font-bold" style={{ color: isToggled ? '#ffffff' : '#111827' }}>Days Active Tracker</h3>
-                <p className="text-sm mt-1" style={{ color: isToggled ? '#9ca3af' : '#6b7280' }}>
-                  {stats.daysActive >= 30 ? '🏆 Legendary!' : stats.daysActive >= 14 ? ' Amazing!' : stats.daysActive >= 7 ? ' On fire!' : stats.daysActive >= 3 ? '💪 Building momentum!' : '🌱 Start your journey!'}
-                </p>
+        {/* Top Bar */}
+        <header className="flex items-center justify-between px-6 py-4 flex-shrink-0" style={{ background: sidebar, borderBottom: `1px solid ${border}` }}>
+          <div className="flex items-center gap-4">
+            <button className="md:hidden p-2 rounded-lg" style={{ background: hover }} onClick={() => setSidebarOpen(true)}>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: text }}>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <div>
+              <h1 className="text-lg font-bold" style={{ color: text }}>
+                {isNewUser ? 'Welcome' : 'Welcome back'}, {user?.name?.split(' ')[0] || 'Friend'}! 👋
+              </h1>
+              <p className="text-xs" style={{ color: subtext }}>Ready to continue your wellness journey?</p>
+            </div>
+          </div>
+          <button onClick={() => navigate('/profile')} className="flex items-center gap-2 px-3 py-2 rounded-xl transition-colors" style={{ background: hover }}>
+            {user?.profilePhoto ? (
+              <img src={user.profilePhoto} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
+            ) : (
+              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style={{ background: activeColor }}>
+                {user?.name?.charAt(0).toUpperCase() || 'U'}
               </div>
-              <div className="text-center px-6 py-4 rounded-2xl" style={{ background: isToggled ? '#222' : '#ffffff', border: isToggled ? '1px solid #444' : '1px solid #e5e7eb' }}>
-                <p className="text-5xl font-bold" style={{ color: isToggled ? '#ffffff' : '#111827' }}>{stats.daysActive}</p>
-                <p className="text-xs uppercase tracking-widest" style={{ color: isToggled ? '#9ca3af' : '#6b7280' }}>Days</p>
-              </div>
+            )}
+            <span className="text-sm font-medium hidden sm:block" style={{ color: text }}>{user?.name || 'Profile'}</span>
+          </button>
+        </header>
+
+        {/* Scrollable Content */}
+        <main className="flex-1 overflow-y-auto p-6">
+
+          {/* Feature Cards */}
+          <div className="mb-8">
+            <h2 className="text-base font-semibold mb-4" style={{ color: subtext }}>Your Wellness Tools</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {features.map((f) => (
+                <div
+                  key={f.path}
+                  onClick={() => handleNav(f.path)}
+                  className="flex items-center gap-4 p-4 rounded-2xl border cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+                  style={{ background: sidebar, borderColor: border }}
+                >
+                  <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0" style={{ background: hover }}>
+                    {f.emoji}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm" style={{ color: text }}>{f.title}</p>
+                    <p className="text-xs mt-0.5" style={{ color: subtext }}>{f.desc}</p>
+                  </div>
+                  <svg className="w-4 h-4 ml-auto flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: subtext }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              ))}
             </div>
           </div>
 
-          <div className="p-6 sm:p-8">
+          {/* Days Active Tracker */}
+          <div className="rounded-2xl border p-6" style={{ background: sidebar, borderColor: border }}>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-base font-semibold" style={{ color: text }}>Days Active</h2>
+                <p className="text-xs mt-0.5" style={{ color: subtext }}>
+                  {stats.daysActive >= 30 ? '🏆 Legendary!' : stats.daysActive >= 14 ? '🌟 Amazing!' : stats.daysActive >= 7 ? '🔥 On fire!' : stats.daysActive >= 3 ? '💪 Building momentum!' : '🌱 Start your streak!'}
+                </p>
+              </div>
+              <div className="text-center px-5 py-3 rounded-xl" style={{ background: hover }}>
+                <p className="text-3xl font-bold" style={{ color: text }}>{stats.daysActive}</p>
+                <p className="text-xs" style={{ color: subtext }}>days</p>
+              </div>
+            </div>
+
             {/* Calendar Grid */}
-            <div className="mb-8">
-              <div className="grid grid-cols-7 gap-1.5 mb-2">
-                {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d, i) => (
-                  <div key={i} className="text-center text-[10px] font-semibold uppercase" style={{ color: isToggled ? '#6b7280' : '#9ca3af' }}>{d}</div>
+            <div className="mb-6">
+              <div className="grid grid-cols-7 gap-1 mb-1">
+                {['S','M','T','W','T','F','S'].map((d, i) => (
+                  <div key={i} className="text-center text-[10px] font-semibold" style={{ color: subtext }}>{d}</div>
                 ))}
               </div>
-              <div className="grid grid-cols-7 gap-1.5">
+              <div className="grid grid-cols-7 gap-1">
                 {[...Array(35)].map((_, i) => {
                   const dayNum = 35 - i
                   const isActive = dayNum <= stats.daysActive
                   const isToday = dayNum === stats.daysActive
                   return (
                     <div key={i}
-                      className={`aspect-square rounded-lg flex items-center justify-center text-sm font-semibold transition-all duration-300 ${isToday ? 'scale-110 z-10 relative' : ''}`}
+                      className={`aspect-square rounded-lg flex items-center justify-center text-xs font-medium transition-all ${isToday ? 'scale-110' : ''}`}
                       style={{
-                        background: isToday
-                          ? isToggled ? '#ffffff' : '#111827'
-                          : isActive
-                            ? isToggled ? '#333333' : '#e5e7eb'
-                            : isToggled ? '#222222' : '#f9fafb',
-                        border: isToday
-                          ? isToggled ? '2px solid #ffffff' : '2px solid #111827'
-                          : isActive
-                            ? isToggled ? '1px solid #444' : '1px solid #d1d5db'
-                            : isToggled ? '1px solid #2a2a2a' : '1px solid #f3f4f6'
+                        background: isToday ? activeColor : isActive ? `${activeColor}30` : hover,
+                        color: isToday ? '#fff' : isActive ? activeColor : subtext,
+                        border: isToday ? `2px solid ${activeColor}` : `1px solid ${border}`
                       }}>
-                      <span style={{ color: isToday ? (isToggled ? '#111827' : '#ffffff') : isActive ? (isToggled ? '#ffffff' : '#374151') : isToggled ? '#444' : '#d1d5db' }}>
-                        {isToday ? '●' : isActive ? '✓' : ''}
-                      </span>
+                      {isToday ? '●' : isActive ? '✓' : ''}
                     </div>
                   )
                 })}
               </div>
             </div>
 
-            {/* Milestones */}
-            <div className="flex flex-wrap gap-2 mb-6">
-              {[
-                { days: 3, emoji: '', label: '3 Days' },
-                { days: 7, emoji: '', label: '1 Week' },
-                { days: 14, emoji: '', label: '2 Weeks' },
-                { days: 30, emoji: '', label: '1 Month' }
-              ].map(({ days, emoji, label }) => {
-                const achieved = stats.daysActive >= days
-                return (
-                  <div key={days}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300"
-                    style={{
-                      background: achieved ? (isToggled ? '#333' : '#111827') : isToggled ? '#222' : '#f3f4f6',
-                      color: achieved ? (isToggled ? '#ffffff' : '#ffffff') : isToggled ? '#555' : '#9ca3af',
-                      border: achieved ? 'none' : isToggled ? '1px solid #333' : '1px solid #e5e7eb'
-                    }}>
-                    <span>{achieved ? emoji : ''}</span>
-                    <span>{label}</span>
-                  </div>
-                )
-              })}
+            {/* Progress */}
+            <div className="mb-5">
+              <div className="flex justify-between text-xs mb-1.5" style={{ color: subtext }}>
+                <span>Progress to 30 days</span>
+                <span style={{ color: text }}>{Math.min(stats.daysActive, 30)}/30</span>
+              </div>
+              <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: hover }}>
+                <div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.min((stats.daysActive / 30) * 100, 100)}%`, background: activeColor }} />
+              </div>
             </div>
 
-            {/* Progress Bar */}
-            <div className="mb-6">
-              <div className="flex justify-between text-xs font-semibold mb-2">
-                <span style={{ color: isToggled ? '#6b7280' : '#9ca3af' }}>Progress to 30 days</span>
-                <span style={{ color: isToggled ? '#ffffff' : '#111827' }}>{Math.min(stats.daysActive, 30)}/30</span>
-              </div>
-              <div className="w-full h-4 rounded-full overflow-hidden" style={{ background: isToggled ? '#222' : '#f3f4f6', border: isToggled ? '1px solid #333' : '1px solid #e5e7eb' }}>
-                <div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.min((stats.daysActive / 30) * 100, 100)}%`, background: isToggled ? '#ffffff' : '#111827' }} />
-              </div>
+            {/* Milestones */}
+            <div className="flex flex-wrap gap-2 mb-5">
+              {[{ days: 3, label: '3 Days' }, { days: 7, label: '1 Week' }, { days: 14, label: '2 Weeks' }, { days: 30, label: '1 Month' }].map(({ days, label }) => {
+                const achieved = stats.daysActive >= days
+                return (
+                  <span key={days} className="px-3 py-1 rounded-full text-xs font-medium"
+                    style={{ background: achieved ? `${activeColor}20` : hover, color: achieved ? activeColor : subtext, border: `1px solid ${achieved ? activeColor + '40' : border}` }}>
+                    {achieved ? '✓' : '○'} {label}
+                  </span>
+                )
+              })}
             </div>
 
             {/* Buttons */}
             <div className="flex gap-3">
               <button onClick={() => updateStats('daysActive', true)}
-                className="flex-1 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:opacity-90"
-                style={{ background: isToggled ? '#ffffff' : '#111827', color: isToggled ? '#111827' : '#ffffff' }}>
-                Mark Today Active
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
+                style={{ background: activeColor }}>
+                ✅ Mark Today Active
               </button>
               <button onClick={() => updateStats('daysActive', false)}
-                className="px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-300 hover:opacity-80"
-                style={{ background: 'transparent', color: isToggled ? '#9ca3af' : '#6b7280', border: isToggled ? '1px solid #444' : '1px solid #d1d5db' }}>
+                className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all hover:opacity-80"
+                style={{ background: hover, color: subtext, border: `1px solid ${border}` }}>
                 Undo
               </button>
             </div>
           </div>
-        </div>
+
+        </main>
       </div>
     </div>
   )
