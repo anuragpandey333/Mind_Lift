@@ -1,10 +1,20 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { useTheme } from '../useTheme'
 
 const DietPlanner = () => {
   const navigate = useNavigate()
-  const [isToggled, setIsToggled] = useState(false)
+  const [user, setUser] = useState(null)
+  const { isToggled } = useTheme()
+
+  const bg = isToggled ? '#0f1117' : '#F8FAFC'
+  const sidebar = isToggled ? '#1a1d27' : '#F8FAFC'
+  const border = isToggled ? '#2a2d3a' : '#BCCCDC'
+  const text = isToggled ? '#e2e8f0' : '#1a202c'
+  const subtext = isToggled ? '#94a3b8' : '#9AA6B2'
+  const hover = isToggled ? '#252836' : '#D9EAFD'
+  const activeColor = isToggled ? '#3b82f6' : '#BCCCDC'
   const [activeTab, setActiveTab] = useState('planner')
   const [selectedMeal, setSelectedMeal] = useState('breakfast')
   const [waterIntake, setWaterIntake] = useState(0)
@@ -13,8 +23,25 @@ const DietPlanner = () => {
   const [dietPlan, setDietPlan] = useState(null)
 
   useEffect(() => {
-    const theme = localStorage.getItem('theme')
-    setIsToggled(theme === 'dark')
+    
+    const fetchUserData = async () => {
+      const token = localStorage.getItem('token')
+      if (!token) { navigate('/login'); return }
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data.user)
+          localStorage.setItem('user', JSON.stringify(data.user))
+        }
+      } catch {
+        const storedUser = localStorage.getItem('user')
+        if (storedUser) setUser(JSON.parse(storedUser))
+      }
+    }
+    fetchUserData()
     fetchDietPlan()
     
     // Track page visit
@@ -159,45 +186,31 @@ const DietPlanner = () => {
   }
 
   return (
-    <div className={`min-h-screen transition-all duration-700 ${
-      isToggled 
-        ? 'bg-gradient-to-br from-[#000000] via-[#1a1a1a] to-[#333333]' 
-        : 'bg-gradient-to-br from-[#EFECE3] via-[#f5f2e9] to-[#e8e5dc]'
-    }`}>
-      {/* Header */}
-      <div className={`backdrop-blur-md shadow-sm border-b transition-all duration-500 ${
-        isToggled 
-          ? 'bg-[#000000]/90 border-[#4A70A9]/30' 
-          : 'bg-[#EFECE3]/80 border-[#8FABD4]/20'
-      }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button 
-                onClick={() => navigate('/dashboard')}
-                className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${
-                  isToggled ? 'text-[#8FABD4] hover:bg-[#4A70A9]/20' : 'text-[#4A70A9] hover:bg-[#8FABD4]/20'
-                }`}
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <h1 className={`text-xl sm:text-2xl font-bold ${
-                isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-              }`}>Diet Planner</h1>
-            </div>
-            <div className="hidden sm:block">
-              <img 
-                src="/photo11.png" 
-                alt="Diet Planner" 
-                className="w-12 h-12 rounded-full object-cover shadow-lg"
-              />
-            </div>
-          </div>
+    <div className="flex flex-col min-h-screen" style={{ background: bg, color: text }}>
+      {/* Top Bar - Same as Dashboard */}
+      <header className="flex items-center justify-between px-6 py-4 flex-shrink-0" style={{ background: sidebar, borderBottom: `1px solid ${border}` }}>
+        <div>
+          <h1 className="text-lg font-bold" style={{ color: text }}>
+            Welcome back, {user?.name?.split(' ')[0] || 'Friend'}!
+          </h1>
+          <p className="text-xs" style={{ color: subtext }}>Ready to continue your wellness journey?</p>
         </div>
-      </div>
+        <button onClick={() => navigate('/profile')} className="flex items-center gap-2 px-3 py-2 rounded-xl transition-colors" style={{ background: hover }}>
+          {user?.profilePhoto ? (
+            <img src={user.profilePhoto} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
+          ) : (
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style={{ background: activeColor }}>
+              {user?.name?.charAt(0).toUpperCase() || 'U'}
+            </div>
+          )}
+          <span className="text-sm font-medium hidden sm:block" style={{ color: text }}>{user?.name || 'Profile'}</span>
+        </button>
+      </header>
 
+
+
+      
+      <main className="flex-1 overflow-y-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Tab Navigation */}
         <div className="flex flex-wrap gap-2 mb-6 sm:mb-8">
@@ -209,10 +222,10 @@ const DietPlanner = () => {
                 activeTab === tab
                   ? isToggled 
                     ? 'bg-[#4A70A9] text-white' 
-                    : 'bg-[#8FABD4] text-white'
+                    : 'bg-[#9AA6B2] text-white'
                   : isToggled
                     ? 'text-[#8FABD4] hover:bg-[#4A70A9]/20'
-                    : 'text-[#4A70A9] hover:bg-[#8FABD4]/20'
+                    : 'text-[#9AA6B2] hover:bg-[#9AA6B2]/20'
               }`}
             >
               {tab.charAt(0).toUpperCase() + tab.slice(1).replace('-', ' ')}
@@ -224,30 +237,20 @@ const DietPlanner = () => {
         {activeTab === 'planner' && (
           <div className="space-y-8">
             {/* My Daily Plan */}
-            <div className={`p-6 rounded-2xl shadow-lg ${
-              isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
-            }`}>
-              <h3 className={`text-xl font-bold mb-4 ${
-                isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-              }`}>My Daily Plan</h3>
+            <div className="p-6 rounded-2xl shadow-lg " style={{ background: sidebar, borderColor: border }}>
+              <h3 className="text-xl font-bold mb-4 " style={{ color: text }}>My Daily Plan</h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {['breakfast', 'lunch', 'dinner'].map((mealType) => (
                   <div key={mealType} className={`p-4 rounded-lg border-2 border-dashed ${
                     myPlan[mealType] 
-                      ? isToggled ? 'border-[#4A70A9] bg-[#4A70A9]/10' : 'border-[#8FABD4] bg-[#8FABD4]/10'
+                      ? isToggled ? 'border-[#4A70A9] bg-[#4A70A9]/10' : 'border-[#8FABD4] bg-[#9AA6B2]/10'
                       : isToggled ? 'border-[#8FABD4]/30' : 'border-[#4A70A9]/30'
                   }`}>
-                    <h4 className={`font-semibold capitalize mb-2 ${
-                      isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-                    }`}>{mealType}</h4>
+                    <h4 className="font-semibold capitalize mb-2 " style={{ color: text }}>{mealType}</h4>
                     {myPlan[mealType] ? (
                       <div>
-                        <p className={`font-medium mb-1 ${
-                          isToggled ? 'text-[#8FABD4]' : 'text-gray-800'
-                        }`}>{myPlan[mealType].name}</p>
-                        <p className={`text-sm mb-2 ${
-                          isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
-                        }`}>{myPlan[mealType].calories} calories</p>
+                        <p className="font-medium mb-1 " style={{ color: text }}>{myPlan[mealType].name}</p>
+                        <p className="text-sm mb-2 " style={{ color: subtext }}>{myPlan[mealType].calories} calories</p>
                         <button 
                           onClick={() => removeFromPlan(mealType)}
                           className="text-red-500 text-sm hover:text-red-700 transition-colors"
@@ -266,12 +269,8 @@ const DietPlanner = () => {
               {(myPlan.breakfast || myPlan.lunch || myPlan.dinner) && (
                 <div className="mt-4 pt-4 border-t border-gray-200">
                   <div className="flex justify-between items-center">
-                    <span className={`font-medium ${
-                      isToggled ? 'text-[#8FABD4]' : 'text-gray-800'
-                    }`}>Total Calories:</span>
-                    <span className={`font-bold ${
-                      isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-                    }`}>
+                    <span className="font-medium " style={{ color: text }}>Total Calories:</span>
+                    <span className="font-bold " style={{ color: text }}>
                       {(myPlan.breakfast?.calories || 0) + (myPlan.lunch?.calories || 0) + (myPlan.dinner?.calories || 0)}
                     </span>
                   </div>
@@ -279,17 +278,13 @@ const DietPlanner = () => {
               )}
             </div>
             {/* Water Intake Tracker */}
-            <div className={`p-6 rounded-2xl shadow-lg ${
-              isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
-            }`}>
-              <h3 className={`text-xl font-bold mb-4 ${
-                isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-              }`}>Daily Water Intake</h3>
+            <div className="p-6 rounded-2xl shadow-lg " style={{ background: sidebar, borderColor: border }}>
+              <h3 className="text-xl font-bold mb-4 " style={{ color: text }}>Daily Water Intake</h3>
               <div className="flex items-center space-x-4">
                 <button 
                   onClick={removeWater}
                   className={`p-2 rounded-full ${
-                    isToggled ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/80' : 'bg-[#8FABD4] hover:bg-[#8FABD4]/80'
+                    isToggled ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/80' : 'bg-[#9AA6B2] hover:bg-[#9AA6B2]/80'
                   } text-white transition-all duration-300`}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -302,7 +297,7 @@ const DietPlanner = () => {
                       key={i}
                       className={`w-8 h-10 rounded-full border-2 transition-all duration-300 ${
                         i < waterIntake
-                          ? isToggled ? 'bg-[#4A70A9] border-[#4A70A9]' : 'bg-[#8FABD4] border-[#8FABD4]'
+                          ? isToggled ? 'bg-[#4A70A9] border-[#4A70A9]' : 'bg-[#9AA6B2] border-[#8FABD4]'
                           : isToggled ? 'border-[#8FABD4]/30' : 'border-[#4A70A9]/30'
                       }`}
                     />
@@ -311,16 +306,14 @@ const DietPlanner = () => {
                 <button 
                   onClick={addWater}
                   className={`p-2 rounded-full ${
-                    isToggled ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/80' : 'bg-[#8FABD4] hover:bg-[#8FABD4]/80'
+                    isToggled ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/80' : 'bg-[#9AA6B2] hover:bg-[#9AA6B2]/80'
                   } text-white transition-all duration-300`}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
                 </button>
-                <span className={`text-sm font-medium ${
-                  isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-                }`}>{waterIntake}/{dailyGoal} glasses</span>
+                <span className="text-sm font-medium " style={{ color: text }}>{waterIntake}/{dailyGoal} glasses</span>
               </div>
             </div>
 
@@ -332,8 +325,8 @@ const DietPlanner = () => {
                   onClick={() => setSelectedMeal(meal)}
                   className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base capitalize transition-all duration-300 ${
                     selectedMeal === meal
-                      ? isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#8FABD4] text-white'
-                      : isToggled ? 'text-[#8FABD4] hover:bg-[#4A70A9]/20' : 'text-[#4A70A9] hover:bg-[#8FABD4]/20'
+                      ? isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#9AA6B2] text-white'
+                      : isToggled ? 'text-[#8FABD4] hover:bg-[#4A70A9]/20' : 'text-[#9AA6B2] hover:bg-[#9AA6B2]/20'
                   }`}
                 >
                   {meal}
@@ -347,13 +340,11 @@ const DietPlanner = () => {
                 <div
                   key={index}
                   className={`p-4 sm:p-6 rounded-2xl shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer ${
-                    isToggled ? 'bg-[#000000]/60 hover:bg-[#000000]/80' : 'bg-white/90 hover:bg-white'
+                    isToggled ? 'bg-[#000000]/60 hover:bg-[#000000]/80' : 'bg-[#D9EAFD]/90 hover:bg-white'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className={`text-lg font-bold ${
-                      isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-                    }`}>{meal.name}</h4>
+                    <h4 className="text-lg font-bold " style={{ color: text }}>{meal.name}</h4>
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                       meal.mood === 'energizing' ? 'bg-yellow-100 text-yellow-800' :
                       meal.mood === 'calming' ? 'bg-blue-100 text-blue-800' :
@@ -367,20 +358,20 @@ const DietPlanner = () => {
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className={`text-sm ${isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'}`}>Calories</span>
-                      <span className={`text-sm font-medium ${isToggled ? 'text-[#8FABD4]' : 'text-gray-800'}`}>{meal.calories}</span>
+                      <span className="text-sm " style={{ color: subtext }}>Calories</span>
+                      <span className="text-sm font-medium " style={{ color: text }}>{meal.calories}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className={`text-sm ${isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'}`}>Protein</span>
-                      <span className={`text-sm font-medium ${isToggled ? 'text-[#8FABD4]' : 'text-gray-800'}`}>{meal.protein}g</span>
+                      <span className="text-sm " style={{ color: subtext }}>Protein</span>
+                      <span className="text-sm font-medium " style={{ color: text }}>{meal.protein}g</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className={`text-sm ${isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'}`}>Carbs</span>
-                      <span className={`text-sm font-medium ${isToggled ? 'text-[#8FABD4]' : 'text-gray-800'}`}>{meal.carbs}g</span>
+                      <span className="text-sm " style={{ color: subtext }}>Carbs</span>
+                      <span className="text-sm font-medium " style={{ color: text }}>{meal.carbs}g</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className={`text-sm ${isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'}`}>Fat</span>
-                      <span className={`text-sm font-medium ${isToggled ? 'text-[#8FABD4]' : 'text-gray-800'}`}>{meal.fat}g</span>
+                      <span className="text-sm " style={{ color: subtext }}>Fat</span>
+                      <span className="text-sm font-medium " style={{ color: text }}>{meal.fat}g</span>
                     </div>
                   </div>
                   <button 
@@ -388,7 +379,7 @@ const DietPlanner = () => {
                     className={`w-full mt-4 py-2 rounded-lg font-medium transition-all duration-300 ${
                     isToggled 
                       ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/80 text-white' 
-                      : 'bg-[#8FABD4] hover:bg-[#8FABD4]/80 text-white'
+                      : 'bg-[#9AA6B2] hover:bg-[#9AA6B2]/80 text-white'
                   }`}>
                     Add to Plan
                   </button>
@@ -401,12 +392,8 @@ const DietPlanner = () => {
         {/* Nutrition Tab */}
         {activeTab === 'nutrition' && (
           <div className="space-y-8">
-            <div className={`p-6 rounded-2xl shadow-lg ${
-              isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
-            }`}>
-              <h3 className={`text-xl font-bold mb-6 ${
-                isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-              }`}>Daily Nutrition Goals</h3>
+            <div className="p-6 rounded-2xl shadow-lg " style={{ background: sidebar, borderColor: border }}>
+              <h3 className="text-xl font-bold mb-6 " style={{ color: text }}>Daily Nutrition Goals</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
                 {[
                   { label: 'Calories', current: 1650, goal: 2000, unit: 'kcal', color: 'bg-red-500' },
@@ -440,17 +427,11 @@ const DietPlanner = () => {
                           />
                         </svg>
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <span className={`text-sm font-bold ${
-                            isToggled ? 'text-[#8FABD4]' : 'text-gray-800'
-                          }`}>{Math.round(percentage)}%</span>
+                          <span className="text-sm font-bold " style={{ color: text }}>{Math.round(percentage)}%</span>
                         </div>
                       </div>
-                      <h4 className={`font-semibold mb-1 ${
-                        isToggled ? 'text-[#8FABD4]' : 'text-gray-800'
-                      }`}>{nutrient.label}</h4>
-                      <p className={`text-sm ${
-                        isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
-                      }`}>{nutrient.current}/{nutrient.goal} {nutrient.unit}</p>
+                      <h4 className="font-semibold mb-1 " style={{ color: text }}>{nutrient.label}</h4>
+                      <p className="text-sm " style={{ color: subtext }}>{nutrient.current}/{nutrient.goal} {nutrient.unit}</p>
                     </div>
                   )
                 })}
@@ -462,28 +443,18 @@ const DietPlanner = () => {
         {/* Mood Foods Tab */}
         {activeTab === 'mood-foods' && (
           <div className="space-y-8">
-            <div className={`p-6 rounded-2xl shadow-lg mb-6 ${
-              isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
-            }`}>
-              <h3 className={`text-xl font-bold mb-4 ${
-                isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-              }`}>Foods for Mental Wellness</h3>
-              <p className={`text-sm ${
-                isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
-              }`}>Discover foods that can naturally boost your mood and mental clarity</p>
+            <div className="p-6 rounded-2xl shadow-lg mb-6 " style={{ background: sidebar, borderColor: border }}>
+              <h3 className="text-xl font-bold mb-4 " style={{ color: text }}>Foods for Mental Wellness</h3>
+              <p className="text-sm " style={{ color: subtext }}>Discover foods that can naturally boost your mood and mental clarity</p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               {moodFoods.map((category, index) => (
                 <div
                   key={index}
-                  className={`p-4 sm:p-6 rounded-2xl shadow-lg transition-all duration-300 hover:scale-105 ${
-                    isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
-                  }`}
+                  className="p-4 sm:p-6 rounded-2xl shadow-lg transition-all duration-300 hover:scale-105 " style={{ background: sidebar, borderColor: border }}
                 >
-                  <h4 className={`text-lg font-bold mb-4 ${
-                    isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-                  }`}>{category.category}</h4>
+                  <h4 className="text-lg font-bold mb-4 " style={{ color: text }}>{category.category}</h4>
                   <div className="grid grid-cols-2 gap-3">
                     {category.foods.map((food, foodIndex) => (
                       <div
@@ -502,6 +473,7 @@ const DietPlanner = () => {
           </div>
         )}
       </div>
+      </main>
     </div>
   )
 }

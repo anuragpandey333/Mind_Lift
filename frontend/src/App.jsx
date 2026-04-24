@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Landing from './components/Landing'
 import NewLogin from './components/NewLogin'
 import NewSignup from './components/NewSignup'
+import Layout from './components/Layout'
 import Dashboard from './components/Dashboard'
 import Profile from './components/Profile'
 import Features from './components/Features'
@@ -15,6 +16,7 @@ import FitnessTracker from './components/FitnessTracker'
 import MoodTracker from './components/MoodTracker'
 import Mentorship from './components/Mentorship'
 import TaskScheduler from './components/TaskScheduler'
+import GoogleCallback from './components/GoogleCallback'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
@@ -28,64 +30,27 @@ function App() {
     <Router>
       <div className="min-h-screen">
         <Routes>
-          <Route 
-            path="/login" 
-            element={!isAuthenticated ? <NewLogin setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/dashboard" />} 
-          />
-          <Route 
-            path="/signup" 
-            element={!isAuthenticated ? <NewSignup setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/dashboard" />} 
-          />
-          <Route 
-            path="/dashboard" 
-            element={isAuthenticated ? <Dashboard setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/login" />} 
-          />
-          <Route 
-            path="/profile" 
-            element={isAuthenticated ? <Profile /> : <Navigate to="/login" />} 
-          />
-          <Route 
-            path="/features" 
-            element={isAuthenticated ? <Features /> : <Navigate to="/login" />} 
-          />
-          <Route 
-            path="/about" 
-            element={isAuthenticated ? <About /> : <Navigate to="/login" />} 
-          />
-          <Route 
-            path="/contact" 
-            element={isAuthenticated ? <Contact /> : <Navigate to="/login" />} 
-          />
-          <Route 
-            path="/ai" 
-            element={isAuthenticated ? <Ai /> : <Navigate to="/login" />} 
-          />
-          <Route 
-            path="/scheduler" 
-            element={isAuthenticated ? <Scheduler /> : <Navigate to="/login" />} 
-          />
-          <Route 
-            path="/task-scheduler" 
-            element={isAuthenticated ? <TaskScheduler /> : <Navigate to="/login" />} 
-          />
-          <Route 
-            path="/diet" 
-            element={isAuthenticated ? <DietPlanner /> : <Navigate to="/login" />} 
-          />
-          <Route 
-            path="/fitness" 
-            element={isAuthenticated ? <FitnessTracker /> : <Navigate to="/login" />} 
-          />
-          <Route 
-            path="/mood" 
-            element={isAuthenticated ? <MoodTracker /> : <Navigate to="/login" />} 
-          />
-          <Route 
-            path="/mentorship" 
-            element={isAuthenticated ? <Mentorship /> : <Navigate to="/login" />} 
-          />
+          <Route path="/login" element={!isAuthenticated ? <NewLogin setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/dashboard" />} />
+          <Route path="/signup" element={!isAuthenticated ? <NewSignup setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/dashboard" />} />
+          <Route path="/auth/google/callback" element={<GoogleCallback setIsAuthenticated={setIsAuthenticated} />} />
           <Route path="/" element={<Landing />} />
           <Route path="/home" element={<Landing />} />
+
+          {/* All authenticated routes share the Layout (fixed sidebar) */}
+          <Route element={isAuthenticated ? <Layout setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/login" />}>
+            <Route path="/dashboard" element={<Dashboard setIsAuthenticated={setIsAuthenticated} />} />
+            <Route path="/mood" element={<MoodTracker />} />
+            <Route path="/fitness" element={<FitnessTracker />} />
+            <Route path="/diet" element={<DietPlanner />} />
+            <Route path="/scheduler" element={<Scheduler />} />
+            <Route path="/mentorship" element={<Mentorship />} />
+            <Route path="/ai" element={<Ai />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/features" element={<Features />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/task-scheduler" element={<TaskScheduler />} />
+          </Route>
         </Routes>
       </div>
     </Router>

@@ -17,8 +17,8 @@ app.use((req, res, next) => {
   next()
 })
 
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
+app.use(express.json({ limit: '10mb' }))
+app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
 // Test route
 app.get('/', (req, res) => {
@@ -35,10 +35,11 @@ try {
 
 // Other routes
 try {
-  app.use('/api/diet', require('./routes/diet'))
-  app.use('/api/mood', require('./routes/mood'))
-  app.use('/api/fitness', require('./routes/fitness'))
-  app.use('/api/tasks', require('./routes/tasks'))
+  const streakMiddleware = require('./middleware/streakMiddleware')
+  app.use('/api/diet', streakMiddleware, require('./routes/diet'))
+  app.use('/api/mood', streakMiddleware, require('./routes/mood'))
+  app.use('/api/fitness', streakMiddleware, require('./routes/fitness'))
+  app.use('/api/tasks', streakMiddleware, require('./routes/tasks'))
 } catch (error) {
   console.error('Routes error:', error)
 }

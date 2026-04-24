@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { useTheme } from '../useTheme'
 
 const TaskScheduler = () => {
   const navigate = useNavigate()
-  const [isToggled, setIsToggled] = useState(false)
+  const { isToggled } = useTheme()
   const [tasks, setTasks] = useState([])
   const [showAddForm, setShowAddForm] = useState(false)
   const [filter, setFilter] = useState('all')

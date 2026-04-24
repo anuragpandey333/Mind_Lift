@@ -1,9 +1,19 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTheme } from '../useTheme'
 
 const Mentorship = () => {
   const navigate = useNavigate()
-  const [isToggled, setIsToggled] = useState(false)
+  const [user, setUser] = useState(null)
+  const { isToggled } = useTheme()
+
+  const bg = isToggled ? '#0f1117' : '#F8FAFC'
+  const sidebar = isToggled ? '#1a1d27' : '#F8FAFC'
+  const border = isToggled ? '#2a2d3a' : '#BCCCDC'
+  const text = isToggled ? '#e2e8f0' : '#1a202c'
+  const subtext = isToggled ? '#94a3b8' : '#9AA6B2'
+  const hover = isToggled ? '#252836' : '#D9EAFD'
+  const activeColor = isToggled ? '#3b82f6' : '#BCCCDC'
   const [activeTab, setActiveTab] = useState('mentors')
   const [selectedMentor, setSelectedMentor] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -30,9 +40,26 @@ const Mentorship = () => {
   })
 
   useEffect(() => {
-    const theme = localStorage.getItem('theme')
+    
+    const fetchUserData = async () => {
+      const token = localStorage.getItem('token')
+      if (!token) { navigate('/login'); return }
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data.user)
+          localStorage.setItem('user', JSON.stringify(data.user))
+        }
+      } catch {
+        const storedUser = localStorage.getItem('user')
+        if (storedUser) setUser(JSON.parse(storedUser))
+      }
+    }
+    fetchUserData()
     const savedCustomMentors = localStorage.getItem('customMentors')
-    setIsToggled(theme === 'dark')
     setCustomMentors(savedCustomMentors ? JSON.parse(savedCustomMentors) : [])
     
     // Track mentorship page visit
@@ -202,85 +229,54 @@ const Mentorship = () => {
 
 
   return (
-    <div className={`min-h-screen transition-all duration-700 ${
-      isToggled 
-        ? 'bg-gradient-to-br from-[#000000] via-[#1a1a1a] to-[#333333]' 
-        : 'bg-gradient-to-br from-[#EFECE3] via-[#f5f2e9] to-[#e8e5dc]'
-    }`}>
-      {/* Header */}
-      <div className={`backdrop-blur-md shadow-sm border-b transition-all duration-500 ${
-        isToggled 
-          ? 'bg-[#000000]/90 border-[#4A70A9]/30' 
-          : 'bg-[#EFECE3]/80 border-[#8FABD4]/20'
-      }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button 
-                onClick={() => navigate('/dashboard')}
-                className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${
-                  isToggled ? 'text-[#8FABD4] hover:bg-[#4A70A9]/20' : 'text-[#4A70A9] hover:bg-[#8FABD4]/20'
-                }`}
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <h1 className={`text-xl sm:text-2xl font-bold ${
-                isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-              }`}>B.Tech Mentorship Hub</h1>
-            </div>
-            <div className="hidden md:flex items-center gap-6 text-center">
-              <div>
-                <div className={`text-2xl font-bold ${
-                  isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-                }`}>{allMentors.length}</div>
-                <div className={`text-sm ${
-                  isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
-                }`}>Mentors</div>
-              </div>
-
-              <button
-                onClick={() => setShowAddMentorForm(true)}
-                className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-                  isToggled 
-                    ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/80 text-white' 
-                    : 'bg-[#8FABD4] hover:bg-[#8FABD4]/80 text-white'
-                }`}
-              >
-                + Add Mentor
-              </button>
-            </div>
-          </div>
+    <div className="flex flex-col min-h-screen" style={{ background: bg, color: text }}>
+      {/* Top Bar - Same as Dashboard */}
+      <header className="flex items-center justify-between px-6 py-4 flex-shrink-0" style={{ background: sidebar, borderBottom: `1px solid ${border}` }}>
+        <div>
+          <h1 className="text-lg font-bold" style={{ color: text }}>
+            Welcome back, {user?.name?.split(' ')[0] || 'Friend'}!
+          </h1>
+          <p className="text-xs" style={{ color: subtext }}>Ready to continue your wellness journey?</p>
         </div>
-      </div>
+        <button onClick={() => navigate('/profile')} className="flex items-center gap-2 px-3 py-2 rounded-xl transition-colors" style={{ background: hover }}>
+          {user?.profilePhoto ? (
+            <img src={user.profilePhoto} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
+          ) : (
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style={{ background: activeColor }}>
+              {user?.name?.charAt(0).toUpperCase() || 'U'}
+            </div>
+          )}
+          <span className="text-sm font-medium hidden sm:block" style={{ color: text }}>{user?.name || 'Profile'}</span>
+        </button>
+      </header>
 
+
+      
+      <main className="flex-1 overflow-y-auto">
       <div className="max-w-7xl mx-auto p-4 sm:p-6">
         {/* Navigation Tabs */}
-        <div className={`rounded-2xl shadow-lg p-2 mb-6 ${
-          isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
-        }`}>
+        <div className="rounded-2xl shadow-lg p-2 mb-6 " style={{ background: sidebar, borderColor: border }}>
           <div className="flex flex-col sm:flex-row gap-2">
             <button
               onClick={() => setActiveTab('mentors')}
               className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
                 activeTab === 'mentors'
-                  ? isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#8FABD4] text-white'
+                  ? isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#9AA6B2] text-white'
                   : isToggled ? 'text-[#8FABD4] hover:bg-[#4A70A9]/20' : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
-              🎓 Find Mentors
+              Graduate Find Mentors
             </button>
 
             <button
               onClick={() => setActiveTab('resources')}
               className={`flex-1 py-3 px-4 rounded-xl font-semibold transition-all ${
                 activeTab === 'resources'
-                  ? isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#8FABD4] text-white'
+                  ? isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#9AA6B2] text-white'
                   : isToggled ? 'text-[#8FABD4] hover:bg-[#4A70A9]/20' : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
-              📚 Resources
+              Book Resources
             </button>
           </div>
         </div>
@@ -289,9 +285,7 @@ const Mentorship = () => {
         {activeTab === 'mentors' && (
           <>
             {/* Search and Filter */}
-            <div className={`rounded-2xl shadow-lg p-4 sm:p-6 mb-6 ${
-              isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
-            }`}>
+            <div className="rounded-2xl shadow-lg p-4 sm:p-6 mb-6 " style={{ background: sidebar, borderColor: border }}>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className="relative">
                   <input
@@ -338,13 +332,11 @@ const Mentorship = () => {
                 const visibleSpecs = isExpandedSpec ? mentor.specialization : mentor.specialization.slice(0, specLimit)
                 
                 return (
-                <div key={mentor.id} className={`rounded-2xl shadow-lg hover:shadow-xl transition-all overflow-hidden h-full flex flex-col ${
-                  isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
-                }`}>
+                <div key={mentor.id} className="rounded-2xl shadow-lg hover:shadow-xl transition-all overflow-hidden h-full flex flex-col " style={{ background: sidebar, borderColor: border }}>
                   <div className={`p-6 text-white ${
                     isToggled 
                       ? 'bg-gradient-to-br from-[#4A70A9] to-[#8FABD4]'
-                      : 'bg-gradient-to-br from-[#8FABD4] to-[#4A70A9]'
+                      : 'bg-gradient-to-br from-[#9AA6B2] to-[#BCCCDC]'
                   }`}>
                     <div className="text-5xl mb-3 text-center">{mentor.image}</div>
                     <h3 className="text-xl font-bold text-center">{mentor.name}</h3>
@@ -356,9 +348,7 @@ const Mentorship = () => {
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-1">
                         <span className="text-yellow-400">⭐</span>
-                        <span className={`font-semibold ${
-                          isToggled ? 'text-[#8FABD4]' : 'text-gray-800'
-                        }`}>{mentor.rating}</span>
+                        <span className="font-semibold " style={{ color: text }}>{mentor.rating}</span>
                         <span className={`text-sm ${
                           isToggled ? 'text-[#8FABD4]/80' : 'text-gray-500'
                         }`}>({mentor.sessions} sessions)</span>
@@ -366,9 +356,7 @@ const Mentorship = () => {
                     </div>
 
                     <div className="mb-4">
-                      <div className={`text-sm font-semibold mb-2 ${
-                        isToggled ? 'text-[#8FABD4]' : 'text-gray-700'
-                      }`}>Specialization:</div>
+                      <div className="text-sm font-semibold mb-2 " style={{ color: text }}>Specialization:</div>
                       <div className="flex flex-wrap gap-2 min-h-[2.5rem]">
                         {visibleSpecs.map((spec, idx) => (
                           <span key={idx} className={`px-3 py-1 rounded-full text-xs font-medium ${
@@ -393,13 +381,11 @@ const Mentorship = () => {
                     </div>
 
                     <div className="mb-4">
-                      <div className={`text-sm font-semibold mb-2 ${
-                        isToggled ? 'text-[#8FABD4]' : 'text-gray-700'
-                      }`}>Focus Areas:</div>
+                      <div className="text-sm font-semibold mb-2 " style={{ color: text }}>Focus Areas:</div>
                       <div className="flex flex-wrap gap-2 min-h-[2rem]">
                         {mentor.focus.map((f, idx) => (
                           <span key={idx} className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            isToggled ? 'bg-[#8FABD4]/20 text-[#8FABD4]' : 'bg-purple-100 text-purple-700'
+                            isToggled ? 'bg-[#9AA6B2]/20 text-[#8FABD4]' : 'bg-purple-100 text-purple-700'
                           }`}>
                             {f}
                           </span>
@@ -427,9 +413,7 @@ const Mentorship = () => {
                       )}
                     </div>
 
-                    <div className={`flex items-center gap-2 text-sm mb-4 ${
-                      isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
-                    }`}>
+                    <div className="flex items-center gap-2 text-sm mb-4 " style={{ color: subtext }}>
                       <span>🕒</span>
                       <span>{mentor.availability}</span>
                     </div>
@@ -437,12 +421,8 @@ const Mentorship = () => {
                     <div className={`mb-4 p-3 rounded-lg ${
                       isToggled ? 'bg-[#000000]/40' : 'bg-gray-50'
                     }`}>
-                      <div className={`text-sm font-semibold mb-2 ${
-                        isToggled ? 'text-[#8FABD4]' : 'text-gray-700'
-                      }`}>Contact Information:</div>
-                      <div className={`space-y-1 text-xs ${
-                        isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
-                      }`}>
+                      <div className="text-sm font-semibold mb-2 " style={{ color: text }}>Contact Information:</div>
+                      <div className="space-y-1 text-xs " style={{ color: subtext }}>
                         <div className="flex items-center gap-2">
                           <span>📧</span>
                           <span className="truncate">{mentor.contact.email}</span>
@@ -452,7 +432,7 @@ const Mentorship = () => {
                           <span>{mentor.contact.phone}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span>💼</span>
+                          <span>Briefcase</span>
                           <span className="truncate">{mentor.contact.linkedin}</span>
                         </div>
                       </div>
@@ -463,7 +443,7 @@ const Mentorship = () => {
                       className={`w-full font-semibold py-3 rounded-lg transition-all mt-auto ${
                         isToggled 
                           ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/80 text-white' 
-                          : 'bg-[#8FABD4] hover:bg-[#8FABD4]/80 text-white'
+                          : 'bg-[#9AA6B2] hover:bg-[#9AA6B2]/80 text-white'
                       }`}
                     >
                       Get Connected
@@ -481,21 +461,15 @@ const Mentorship = () => {
         {/* Resources Tab */}
         {activeTab === 'resources' && (
           <div className="space-y-6">
-            <div className={`rounded-2xl shadow-lg p-6 ${
-              isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
-            }`}>
-              <h2 className={`text-2xl font-bold mb-6 ${
-                isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-              }`}>Helpful Resources</h2>
+            <div className="rounded-2xl shadow-lg p-6 " style={{ background: sidebar, borderColor: border }}>
+              <h2 className="text-2xl font-bold mb-6 " style={{ color: text }}>Helpful Resources</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className={`border-2 rounded-xl p-6 transition-all ${
                   isToggled ? 'border-[#8FABD4]/30 hover:border-[#4A70A9]' : 'border-indigo-200 hover:border-indigo-400'
                 }`}>
-                  <div className="text-3xl mb-3">❤️</div>
-                  <h3 className={`text-lg font-bold mb-2 ${
-                    isToggled ? 'text-[#8FABD4]' : 'text-gray-800'
-                  }`}>Mental Health Support</h3>
+                  <div className="text-3xl mb-3">Heart</div>
+                  <h3 className="text-lg font-bold mb-2 " style={{ color: text }}>Mental Health Support</h3>
                   <ul className={`space-y-2 text-sm ${
                     isToggled ? 'text-[#8FABD4]/90' : 'text-gray-600'
                   }`}>
@@ -510,9 +484,7 @@ const Mentorship = () => {
                   isToggled ? 'border-[#8FABD4]/30 hover:border-[#4A70A9]' : 'border-purple-200 hover:border-purple-400'
                 }`}>
                   <div className="text-3xl mb-3">🎯</div>
-                  <h3 className={`text-lg font-bold mb-2 ${
-                    isToggled ? 'text-[#8FABD4]' : 'text-gray-800'
-                  }`}>Career Guidance</h3>
+                  <h3 className="text-lg font-bold mb-2 " style={{ color: text }}>Career Guidance</h3>
                   <ul className={`space-y-2 text-sm ${
                     isToggled ? 'text-[#8FABD4]/90' : 'text-gray-600'
                   }`}>
@@ -526,10 +498,8 @@ const Mentorship = () => {
                 <div className={`border-2 rounded-xl p-6 transition-all ${
                   isToggled ? 'border-[#8FABD4]/30 hover:border-[#4A70A9]' : 'border-green-200 hover:border-green-400'
                 }`}>
-                  <div className="text-3xl mb-3">📚</div>
-                  <h3 className={`text-lg font-bold mb-2 ${
-                    isToggled ? 'text-[#8FABD4]' : 'text-gray-800'
-                  }`}>Study Resources</h3>
+                  <div className="text-3xl mb-3">Book</div>
+                  <h3 className="text-lg font-bold mb-2 " style={{ color: text }}>Study Resources</h3>
                   <ul className={`space-y-2 text-sm ${
                     isToggled ? 'text-[#8FABD4]/90' : 'text-gray-600'
                   }`}>
@@ -543,10 +513,8 @@ const Mentorship = () => {
                 <div className={`border-2 rounded-xl p-6 transition-all ${
                   isToggled ? 'border-[#8FABD4]/30 hover:border-[#4A70A9]' : 'border-blue-200 hover:border-blue-400'
                 }`}>
-                  <div className="text-3xl mb-3">💼</div>
-                  <h3 className={`text-lg font-bold mb-2 ${
-                    isToggled ? 'text-[#8FABD4]' : 'text-gray-800'
-                  }`}>Internship Platforms</h3>
+                  <div className="text-3xl mb-3">Briefcase</div>
+                  <h3 className="text-lg font-bold mb-2 " style={{ color: text }}>Internship Platforms</h3>
                   <ul className={`space-y-2 text-sm ${
                     isToggled ? 'text-[#8FABD4]/90' : 'text-gray-600'
                   }`}>
@@ -562,24 +530,24 @@ const Mentorship = () => {
             <div className={`rounded-2xl shadow-lg p-8 text-white ${
               isToggled 
                 ? 'bg-gradient-to-br from-[#4A70A9] to-[#8FABD4]'
-                : 'bg-gradient-to-br from-[#8FABD4] to-[#4A70A9]'
+                : 'bg-gradient-to-br from-[#9AA6B2] to-[#BCCCDC]'
             }`}>
               <h3 className="text-2xl font-bold mb-4">Remember</h3>
               <div className="space-y-3">
                 <p className="flex items-start gap-3">
-                  <span className="text-xl">✅</span>
+                  <span className="text-xl">Check</span>
                   <span>It's okay to ask for help. Every successful person had mentors.</span>
                 </p>
                 <p className="flex items-start gap-3">
-                  <span className="text-xl">✅</span>
+                  <span className="text-xl">Check</span>
                   <span>Academic pressure is temporary. Your mental health is permanent.</span>
                 </p>
                 <p className="flex items-start gap-3">
-                  <span className="text-xl">✅</span>
+                  <span className="text-xl">Check</span>
                   <span>One bad semester doesn't define your career or future.</span>
                 </p>
                 <p className="flex items-start gap-3">
-                  <span className="text-xl">✅</span>
+                  <span className="text-xl">Check</span>
                   <span>Take breaks. Rest is productive. Burnout helps no one.</span>
                 </p>
               </div>
@@ -596,7 +564,7 @@ const Mentorship = () => {
               <div className={`p-6 text-white text-center ${
                 isToggled 
                   ? 'bg-gradient-to-br from-[#4A70A9] to-[#8FABD4]'
-                  : 'bg-gradient-to-br from-[#8FABD4] to-[#4A70A9]'
+                  : 'bg-gradient-to-br from-[#9AA6B2] to-[#BCCCDC]'
               }`}>
                 <div className="text-6xl mb-4">🎉</div>
                 <h2 className="text-2xl font-bold mb-2">Connected Successfully!</h2>
@@ -604,9 +572,7 @@ const Mentorship = () => {
               </div>
 
               <div className="p-6 text-center">
-                <p className={`mb-6 ${
-                  isToggled ? 'text-[#8FABD4]' : 'text-gray-700'
-                }`}>
+                <p className="mb-6 " style={{ color: text }}>
                   You will shortly get the Zoom link on your email ID and registered number.
                 </p>
                 <button
@@ -614,7 +580,7 @@ const Mentorship = () => {
                   className={`w-full font-semibold py-3 rounded-lg transition-all text-white ${
                     isToggled 
                       ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/80'
-                      : 'bg-[#8FABD4] hover:bg-[#8FABD4]/80'
+                      : 'bg-[#9AA6B2] hover:bg-[#9AA6B2]/80'
                   }`}
                 >
                   Got it!
@@ -633,7 +599,7 @@ const Mentorship = () => {
               <div className={`p-6 text-white ${
                 isToggled 
                   ? 'bg-gradient-to-br from-[#4A70A9] to-[#8FABD4]'
-                  : 'bg-gradient-to-br from-[#8FABD4] to-[#4A70A9]'
+                  : 'bg-gradient-to-br from-[#9AA6B2] to-[#BCCCDC]'
               }`}>
                 <h2 className="text-2xl font-bold mb-2">Add Personal Mentor</h2>
                 <p className="text-indigo-100">Add someone you know as your mentor</p>
@@ -757,7 +723,7 @@ const Mentorship = () => {
                     }}
                     className={`flex-1 px-6 py-3 border-2 font-semibold rounded-lg transition-all ${
                       isToggled 
-                        ? 'border-[#8FABD4]/30 text-[#8FABD4] hover:bg-[#8FABD4]/10'
+                        ? 'border-[#8FABD4]/30 text-[#8FABD4] hover:bg-[#9AA6B2]/10'
                         : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                     }`}
                   >
@@ -768,7 +734,7 @@ const Mentorship = () => {
                     className={`flex-1 font-semibold py-3 rounded-lg transition-all text-white ${
                       isToggled 
                         ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/80'
-                        : 'bg-[#8FABD4] hover:bg-[#8FABD4]/80'
+                        : 'bg-[#9AA6B2] hover:bg-[#9AA6B2]/80'
                     }`}
                   >
                     Add Mentor
@@ -781,6 +747,7 @@ const Mentorship = () => {
 
 
       </div>
+      </main>
     </div>
   )
 }

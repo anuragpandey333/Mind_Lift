@@ -1,5 +1,7 @@
 import axios from 'axios'
 import React, { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useTheme } from '../useTheme'
 
 const API_KEY = "AIzaSyBFPyxs7mwID2ANscz-vKfH8eYl9rcH4fY"
 
@@ -62,11 +64,44 @@ const getLocalResponse = (userMessage) => {
 }
 
 function Ai() {
+  const navigate = useNavigate()
+  const [user, setUser] = useState(null)
+  const { isToggled } = useTheme()
   const [messages, setMessages] = useState([])
   const [inputMessage, setInputMessage] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
+
+  // Theme colors
+  const bg = isToggled ? '#0f1117' : '#F8FAFC'
+  const sidebar = isToggled ? '#1a1d27' : '#F8FAFC'
+  const border = isToggled ? '#2a2d3a' : '#BCCCDC'
+  const text = isToggled ? '#e2e8f0' : '#1a202c'
+  const subtext = isToggled ? '#94a3b8' : '#9AA6B2'
+  const hover = isToggled ? '#252836' : '#D9EAFD'
+  const activeColor = isToggled ? '#3b82f6' : '#BCCCDC'
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      const token = localStorage.getItem('token')
+      if (!token) { navigate('/login'); return }
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5001'}/api/auth/me`, {
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data.user)
+          localStorage.setItem('user', JSON.stringify(data.user))
+        }
+      } catch {
+        const storedUser = localStorage.getItem('user')
+        if (storedUser) setUser(JSON.parse(storedUser))
+      }
+    }
+    fetchUserData()
+  }, [navigate])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -94,7 +129,7 @@ function Ai() {
       )
       const aiResponse = res.data?.candidates?.[0]?.content?.parts?.[0]?.text || "I couldn't generate a response."
       setMessages((prev) => [...prev, { text: aiResponse, isUser: false, id: Date.now() + 1 }])
-    } catch (error) {
+    } catch {
       const localResponse = getLocalResponse(userMessage)
       setMessages((prev) => [...prev, { text: localResponse, isUser: false, id: Date.now() + 1 }])
     } finally {
@@ -103,16 +138,42 @@ function Ai() {
   }
 
   return (
-    <div className="pt-20 min-h-screen bg-white px-4 pb-40 flex flex-col">
-      <div className="w-full max-w-3xl mx-auto flex-grow overflow-hidden">
-        <h1 className="text-2xl md:text-3xl font-bold text-[#818cf8] mb-6 text-center">
-          🤖 AI Assistant
+    <div className="flex flex-col min-h-screen" style={{ background: bg, color: text }}>
+      {/* Top Bar - Same as Dashboard */}
+      <header className="flex items-center justify-between px-6 py-4 flex-shrink-0" style={{ background: sidebar, borderBottom: `1px solid ${border}` }}>
+        <div>
+          <h1 className="text-lg font-bold" style={{ color: text }}>
+            Welcome back, {user?.name?.split(' ')[0] || 'Friend'}!
+          </h1>
+          <p className="text-xs" style={{ color: subtext }}>Ready to continue your wellness journey?</p>
+        </div>
+        <button onClick={() => navigate('/profile')} className="flex items-center gap-2 px-3 py-2 rounded-xl transition-colors" style={{ background: hover }}>
+          {user?.profilePhoto ? (
+            <img src={user.profilePhoto} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
+          ) : (
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style={{ background: activeColor }}>
+              {user?.name?.charAt(0).toUpperCase() || 'U'}
+            </div>
+          )}
+          <span className="text-sm font-medium hidden sm:block" style={{ color: text }}>{user?.name || 'Profile'}</span>
+        </button>
+      </header>
+
+      <main className="flex-1 overflow-y-auto">
+      <div className="h-full flex flex-col" style={{ background: bg }}>
+      <div className="w-full max-w-3xl mx-auto flex flex-col flex-1 overflow-hidden px-4 pt-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-[#9AA6B2] mb-6 text-center flex-shrink-0">
+          AI Assistant
         </h1>
 
-        <div className="overflow-y-auto max-h-[calc(100vh-240px)] pr-2 custom-scrollbar">
+        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
           {messages.length === 0 && (
             <div className="text-center py-16">
-              <div className="bg-[#F5EFFF] inline-block p-4 rounded-full mb-4 shadow-md text-4xl">🤖</div>
+              <div className="bg-[#D9EAFD] inline-block p-4 rounded-full mb-4 shadow-md">
+                <svg className="w-12 h-12 text-[#9AA6B2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
               <h2 className="text-lg font-medium text-gray-700 mb-2">Welcome to AI Assistant</h2>
               <p className="text-gray-500 max-w-md mx-auto">Ask me anything — coding, health, study tips, or just chat!</p>
             </div>
@@ -121,7 +182,7 @@ function Ai() {
           {messages.map((message) => (
             <div
               key={message.id}
-              className="p-4 my-3 rounded-lg shadow-md border border-[#E5D9F2]"
+              className="p-4 my-3 rounded-lg shadow-md border border-[#BCCCDC]"
               style={{
                 backgroundColor: message.isUser ? 'white' : '#F5EFFF',
                 borderLeftWidth: 4,
@@ -129,8 +190,16 @@ function Ai() {
               }}
             >
               <div className="flex items-center mb-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm text-sm ${message.isUser ? "bg-[#CDC1FF]" : "bg-[#818cf8]"} text-white`}>
-                  {message.isUser ? '👤' : '🤖'}
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm ${message.isUser ? "bg-[#9AA6B2]" : "bg-[#9AA6B2]"} text-white`}>
+                  {message.isUser ? (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  )}
                 </div>
                 <span className="ml-2 font-medium text-sm text-gray-700">
                   {message.isUser ? "You" : "AI Assistant"}
@@ -141,42 +210,48 @@ function Ai() {
           ))}
 
           {isLoading && (
-            <div className="p-4 my-3 rounded-lg shadow-md border border-[#E5D9F2] bg-[#F5EFFF]"
+            <div className="p-4 my-3 rounded-lg shadow-md border border-[#BCCCDC] bg-[#F6F4E8]"
               style={{ borderLeftWidth: 4, borderLeftColor: '#818cf8' }}>
               <div className="flex items-center mb-2">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#818cf8] text-white text-sm">🤖</div>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#9AA6B2] text-white">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
                 <span className="ml-2 font-medium text-sm text-gray-700">AI Assistant</span>
               </div>
               <div className="pl-10 flex items-center gap-1">
-                <div className="w-2 h-2 bg-[#818cf8] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                <div className="w-2 h-2 bg-[#818cf8] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                <div className="w-2 h-2 bg-[#818cf8] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                <div className="w-2 h-2 bg-[#9AA6B2] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                <div className="w-2 h-2 bg-[#9AA6B2] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                <div className="w-2 h-2 bg-[#9AA6B2] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
               </div>
             </div>
           )}
 
-          <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} />
         </div>
       </div>
 
-      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 w-full max-w-3xl px-4">
-        <div className="bg-white rounded-2xl shadow-lg border border-[#E5D9F2] p-3 flex items-center space-x-3">
+      <div className="w-full max-w-3xl mx-auto px-4 py-3 flex-shrink-0">
+        <div className="bg-[#F8FAFC] rounded-2xl shadow-lg border border-[#BCCCDC] p-3 flex items-center space-x-3">
           <input
             ref={inputRef}
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            className="flex-1 px-4 py-3 text-black placeholder-gray-500 rounded-xl border border-[#E5D9F2] focus:outline-none focus:ring-2 focus:ring-[#CDC1FF]"
+            className="flex-1 px-4 py-3 text-black placeholder-gray-500 rounded-xl border border-[#BCCCDC] focus:outline-none focus:ring-2 focus:ring-[#9AA6B2]"
             type="text"
             placeholder="Ask something..."
             onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSendMessage()}
             disabled={isLoading}
           />
           <button
-            className={`${inputMessage.trim() && !isLoading ? "bg-[#818cf8] hover:bg-[#6d75e8]" : "bg-gray-200 cursor-not-allowed"} text-white px-5 py-3 rounded-xl font-medium transition-all duration-200 shadow-md`}
+            className={`${inputMessage.trim() && !isLoading ? "bg-[#9AA6B2] hover:bg-[#9AA6B2]/80" : "bg-gray-200 cursor-not-allowed"} text-white px-5 py-3 rounded-xl font-medium transition-all duration-200 shadow-md`}
             onClick={handleSendMessage}
             disabled={!inputMessage.trim() || isLoading}
           >
-            ➤
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
           </button>
         </div>
       </div>
@@ -192,6 +267,8 @@ function Ai() {
         }
         .animate-bounce { animation: bounce 0.8s infinite; }
       `}</style>
+      </div>
+      </main>
     </div>
   )
 }

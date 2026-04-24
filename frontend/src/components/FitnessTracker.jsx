@@ -1,10 +1,20 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { useTheme } from '../useTheme'
 
 const FitnessTracker = () => {
   const navigate = useNavigate()
-  const [isToggled, setIsToggled] = useState(false)
+  const [user, setUser] = useState(null)
+  const { isToggled } = useTheme()
+
+  const bg = isToggled ? '#0f1117' : '#F8FAFC'
+  const sidebar = isToggled ? '#1a1d27' : '#F8FAFC'
+  const border = isToggled ? '#2a2d3a' : '#BCCCDC'
+  const text = isToggled ? '#e2e8f0' : '#1a202c'
+  const subtext = isToggled ? '#94a3b8' : '#9AA6B2'
+  const hover = isToggled ? '#252836' : '#D9EAFD'
+  const activeColor = isToggled ? '#3b82f6' : '#BCCCDC'
   const [activeTab, setActiveTab] = useState('profile')
 
   const [userProfile, setUserProfile] = useState({ weight: '', height: '', age: '' })
@@ -15,8 +25,25 @@ const FitnessTracker = () => {
   const [waterIntake, setWaterIntake] = useState(0)
 
   useEffect(() => {
-    const theme = localStorage.getItem('theme')
-    setIsToggled(theme === 'dark')
+    
+    const fetchUserData = async () => {
+      const token = localStorage.getItem('token')
+      if (!token) { navigate('/login'); return }
+      try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+        })
+        if (response.ok) {
+          const data = await response.json()
+          setUser(data.user)
+          localStorage.setItem('user', JSON.stringify(data.user))
+        }
+      } catch {
+        const storedUser = localStorage.getItem('user')
+        if (storedUser) setUser(JSON.parse(storedUser))
+      }
+    }
+    fetchUserData()
     fetchFitnessProfile()
     fetchWorkouts()
     fetchDietPlan()
@@ -266,38 +293,30 @@ const FitnessTracker = () => {
 
 
   return (
-    <div className={`min-h-screen transition-all duration-700 ${
-      isToggled 
-        ? 'bg-gradient-to-br from-[#000000] via-[#1a1a1a] to-[#333333]' 
-        : 'bg-gradient-to-br from-[#EFECE3] via-[#f5f2e9] to-[#e8e5dc]'
-    }`}>
-      {/* Header */}
-      <div className={`backdrop-blur-md shadow-sm border-b transition-all duration-500 ${
-        isToggled 
-          ? 'bg-[#000000]/90 border-[#4A70A9]/30' 
-          : 'bg-[#EFECE3]/80 border-[#8FABD4]/20'
-      }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button 
-                onClick={() => navigate('/dashboard')}
-                className={`p-2 rounded-lg transition-all duration-300 hover:scale-110 ${
-                  isToggled ? 'text-[#8FABD4] hover:bg-[#4A70A9]/20' : 'text-[#4A70A9] hover:bg-[#8FABD4]/20'
-                }`}
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <h1 className={`text-xl sm:text-2xl font-bold ${
-                isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-              }`}>Fitness Tracker</h1>
-            </div>
-          </div>
+    <div className="flex flex-col min-h-screen" style={{ background: bg, color: text }}>
+      {/* Top Bar - Same as Dashboard */}
+      <header className="flex items-center justify-between px-6 py-4 flex-shrink-0" style={{ background: sidebar, borderBottom: `1px solid ${border}` }}>
+        <div>
+          <h1 className="text-lg font-bold" style={{ color: text }}>
+            Welcome back, {user?.name?.split(' ')[0] || 'Friend'}!
+          </h1>
+          <p className="text-xs" style={{ color: subtext }}>Ready to continue your wellness journey?</p>
         </div>
-      </div>
+        <button onClick={() => navigate('/profile')} className="flex items-center gap-2 px-3 py-2 rounded-xl transition-colors" style={{ background: hover }}>
+          {user?.profilePhoto ? (
+            <img src={user.profilePhoto} alt="Profile" className="w-8 h-8 rounded-full object-cover" />
+          ) : (
+            <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold" style={{ background: activeColor }}>
+              {user?.name?.charAt(0).toUpperCase() || 'U'}
+            </div>
+          )}
+          <span className="text-sm font-medium hidden sm:block" style={{ color: text }}>{user?.name || 'Profile'}</span>
+        </button>
+      </header>
 
+
+      
+      <main className="flex-1 overflow-y-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Tab Navigation */}
         <div className="flex flex-wrap gap-2 mb-6 sm:mb-8">
@@ -307,8 +326,8 @@ const FitnessTracker = () => {
               onClick={() => setActiveTab(tab)}
               className={`px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-medium text-sm sm:text-base transition-all duration-300 capitalize ${
                 activeTab === tab
-                  ? isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#8FABD4] text-white'
-                  : isToggled ? 'text-[#8FABD4] hover:bg-[#4A70A9]/20' : 'text-[#4A70A9] hover:bg-[#8FABD4]/20'
+                  ? isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#9AA6B2] text-white'
+                  : isToggled ? 'text-[#8FABD4] hover:bg-[#4A70A9]/20' : 'text-[#9AA6B2] hover:bg-[#9AA6B2]/20'
               }`}
             >
               {tab}
@@ -319,17 +338,11 @@ const FitnessTracker = () => {
         {/* Profile Tab */}
         {activeTab === 'profile' && (
           <div className="space-y-8">
-            <div className={`p-6 rounded-2xl shadow-lg ${
-              isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
-            }`}>
-              <h3 className={`text-xl font-bold mb-6 ${
-                isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-              }`}>Your Fitness Profile</h3>
+            <div className="p-6 rounded-2xl shadow-lg " style={{ background: sidebar, borderColor: border }}>
+              <h3 className="text-xl font-bold mb-6 " style={{ color: text }}>Your Fitness Profile</h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${
-                    isToggled ? 'text-[#8FABD4]' : 'text-gray-700'
-                  }`}>Weight (kg)</label>
+                  <label className="block text-sm font-medium mb-2 " style={{ color: text }}>Weight (kg)</label>
                   <input
                     type="number"
                     value={userProfile.weight || ''}
@@ -338,15 +351,13 @@ const FitnessTracker = () => {
                     className={`w-full p-3 rounded-lg border transition-all duration-300 ${
                       isToggled 
                         ? 'bg-[#000000]/40 border-[#8FABD4]/30 text-[#8FABD4] focus:border-[#4A70A9]'
-                        : 'bg-white border-gray-300 text-gray-800 focus:border-[#8FABD4]'
+                        : 'bg-white border-[#BCCCDC] text-gray-800 focus:border-[#9AA6B2]'
                     }`}
                     placeholder="Enter your weight"
                   />
                 </div>
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${
-                    isToggled ? 'text-[#8FABD4]' : 'text-gray-700'
-                  }`}>Height (cm)</label>
+                  <label className="block text-sm font-medium mb-2 " style={{ color: text }}>Height (cm)</label>
                   <input
                     type="number"
                     value={userProfile.height || ''}
@@ -355,15 +366,13 @@ const FitnessTracker = () => {
                     className={`w-full p-3 rounded-lg border transition-all duration-300 ${
                       isToggled 
                         ? 'bg-[#000000]/40 border-[#8FABD4]/30 text-[#8FABD4] focus:border-[#4A70A9]'
-                        : 'bg-white border-gray-300 text-gray-800 focus:border-[#8FABD4]'
+                        : 'bg-white border-[#BCCCDC] text-gray-800 focus:border-[#9AA6B2]'
                     }`}
                     placeholder="Enter your height"
                   />
                 </div>
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${
-                    isToggled ? 'text-[#8FABD4]' : 'text-gray-700'
-                  }`}>Age</label>
+                  <label className="block text-sm font-medium mb-2 " style={{ color: text }}>Age</label>
                   <input
                     type="number"
                     value={userProfile.age || ''}
@@ -372,7 +381,7 @@ const FitnessTracker = () => {
                     className={`w-full p-3 rounded-lg border transition-all duration-300 ${
                       isToggled 
                         ? 'bg-[#000000]/40 border-[#8FABD4]/30 text-[#8FABD4] focus:border-[#4A70A9]'
-                        : 'bg-white border-gray-300 text-gray-800 focus:border-[#8FABD4]'
+                        : 'bg-white border-[#BCCCDC] text-gray-800 focus:border-[#9AA6B2]'
                     }`}
                     placeholder="Enter your age"
                   />
@@ -380,9 +389,7 @@ const FitnessTracker = () => {
               </div>
               
               <div className="mt-6">
-                <label className={`block text-sm font-medium mb-2 ${
-                  isToggled ? 'text-[#8FABD4]' : 'text-gray-700'
-                }`}>Select Day for Workout Plan</label>
+                <label className="block text-sm font-medium mb-2 " style={{ color: text }}>Select Day for Workout Plan</label>
                 <select
                   value={userProfile.selectedDay}
                   onChange={(e) => {
@@ -393,7 +400,7 @@ const FitnessTracker = () => {
                   className={`w-full p-3 rounded-lg border transition-all duration-300 ${
                     isToggled 
                       ? 'bg-[#000000]/40 border-[#8FABD4]/30 text-[#8FABD4] focus:border-[#4A70A9]'
-                      : 'bg-white border-gray-300 text-gray-800 focus:border-[#8FABD4]'
+                      : 'bg-white border-[#BCCCDC] text-gray-800 focus:border-[#9AA6B2]'
                   }`}
                 >
                   <option value="Today">Today</option>
@@ -413,7 +420,7 @@ const FitnessTracker = () => {
                   className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 ${
                     isToggled 
                       ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/80 text-white' 
-                      : 'bg-[#8FABD4] hover:bg-[#8FABD4]/80 text-white'
+                      : 'bg-[#9AA6B2] hover:bg-[#9AA6B2]/80 text-white'
                   }`}
                 >
                   Submit Profile
@@ -454,62 +461,40 @@ const FitnessTracker = () => {
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
               {/* Calories Burned */}
-              <div className={`p-6 rounded-2xl shadow-lg ${
-                isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
-              }`}>
+              <div className="p-6 rounded-2xl shadow-lg " style={{ background: sidebar, borderColor: border }}>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className={`text-lg font-bold ${
-                    isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-                  }`}>Calories Burned</h3>
+                  <h3 className="text-lg font-bold " style={{ color: text }}>Calories Burned</h3>
                   <span className="text-2xl">🔥</span>
                 </div>
-                <p className={`text-center text-3xl font-bold mb-2 ${
-                  isToggled ? 'text-[#8FABD4]' : 'text-gray-800'
-                }`}>{totalCalories}</p>
-                <p className={`text-center text-sm ${
-                  isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
-                }`}>From workouts</p>
+                <p className="text-center text-3xl font-bold mb-2 " style={{ color: text }}>{totalCalories}</p>
+                <p className="text-center text-sm " style={{ color: subtext }}>From workouts</p>
               </div>
 
               {/* Active Minutes */}
-              <div className={`p-6 rounded-2xl shadow-lg ${
-                isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
-              }`}>
+              <div className="p-6 rounded-2xl shadow-lg " style={{ background: sidebar, borderColor: border }}>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className={`text-lg font-bold ${
-                    isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-                  }`}>Active Minutes</h3>
+                  <h3 className="text-lg font-bold " style={{ color: text }}>Active Minutes</h3>
                   <span className="text-2xl">⏱️</span>
                 </div>
-                <p className={`text-center text-3xl font-bold mb-2 ${
-                  isToggled ? 'text-[#8FABD4]' : 'text-gray-800'
-                }`}>
+                <p className="text-center text-3xl font-bold mb-2 " style={{ color: text }}>
                   {workouts.filter(w => w.completed).reduce((sum, w) => sum + w.duration, 0)}
                 </p>
-                <p className={`text-center text-sm ${
-                  isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
-                }`}>Minutes today</p>
+                <p className="text-center text-sm " style={{ color: subtext }}>Minutes today</p>
               </div>
             </div>
 
             {/* Today's Workouts */}
-            <div className={`p-6 rounded-2xl shadow-lg ${
-              isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
-            }`}>
+            <div className="p-6 rounded-2xl shadow-lg " style={{ background: sidebar, borderColor: border }}>
               <div className="flex items-center justify-between mb-4">
-                <h3 className={`text-xl font-bold ${
-                  isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-                }`}>Today's Workouts ({currentDay})</h3>
-                <div className={`text-sm ${
-                  isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
-                }`}>Progress: {Math.round(getWeeklyProgress())}%</div>
+                <h3 className="text-xl font-bold " style={{ color: text }}>Today's Workouts ({currentDay})</h3>
+                <div className="text-sm " style={{ color: subtext }}>Progress: {Math.round(getWeeklyProgress())}%</div>
               </div>
               <div className="space-y-3">
                 {workouts.map((workout) => (
                   <div key={workout.id} className={`p-4 rounded-lg border ${
                     workout.completed 
                       ? isToggled ? 'bg-[#4A70A9]/20 border-green-500' : 'bg-green-50 border-green-200'
-                      : isToggled ? 'bg-[#8FABD4]/10 border-[#8FABD4]/30' : 'bg-gray-50 border-gray-200'
+                      : isToggled ? 'bg-[#9AA6B2]/10 border-[#8FABD4]/30' : 'bg-gray-50 border-gray-200'
                   }`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
@@ -518,7 +503,7 @@ const FitnessTracker = () => {
                           className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
                             workout.completed 
                               ? 'bg-green-500 border-green-500' 
-                              : isToggled ? 'border-[#8FABD4]' : 'border-gray-300'
+                              : isToggled ? 'border-[#8FABD4]' : 'border-[#BCCCDC]'
                           }`}
                         >
                           {workout.completed && (
@@ -537,15 +522,13 @@ const FitnessTracker = () => {
                             <button 
                               onClick={() => setSelectedWorkout(selectedWorkout === workout.id ? null : workout.id)}
                               className={`text-xs px-2 py-1 rounded ${
-                                isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#8FABD4] text-white'
+                                isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#9AA6B2] text-white'
                               }`}
                             >
                               {selectedWorkout === workout.id ? 'Hide' : 'Info'}
                             </button>
                           </div>
-                          <p className={`text-sm ${
-                            isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
-                          }`}>{workout.duration} min • {workout.calories} cal</p>
+                          <p className="text-sm " style={{ color: subtext }}>{workout.duration} min • {workout.calories} cal</p>
                           {selectedWorkout === workout.id && (
                             <div className={`mt-2 p-3 rounded text-sm ${
                               isToggled ? 'bg-[#000000]/40 text-[#8FABD4]/90' : 'bg-blue-50 text-gray-700'
@@ -591,51 +574,37 @@ const FitnessTracker = () => {
         {activeTab === 'workouts' && (
           <div className="space-y-8">
             {!userProfile.weight || !userProfile.height ? (
-              <div className={`p-8 rounded-2xl shadow-lg text-center ${
-                isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
-              }`}>
-                <h3 className={`text-xl font-bold mb-4 ${
-                  isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-                }`}>Complete Your Profile First</h3>
-                <p className={`mb-6 ${
-                  isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
-                }`}>Please enter your weight and height in the Profile tab to get personalized workout recommendations.</p>
+              <div className="p-8 rounded-2xl shadow-lg text-center " style={{ background: sidebar, borderColor: border }}>
+                <h3 className="text-xl font-bold mb-4 " style={{ color: text }}>Complete Your Profile First</h3>
+                <p className="mb-6 " style={{ color: subtext }}>Please enter your weight and height in the Profile tab to get personalized workout recommendations.</p>
                 <button 
                   onClick={() => setActiveTab('profile')}
                   className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 ${
                     isToggled 
                       ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/80 text-white' 
-                      : 'bg-[#8FABD4] hover:bg-[#8FABD4]/80 text-white'
+                      : 'bg-[#9AA6B2] hover:bg-[#9AA6B2]/80 text-white'
                   }`}
                 >
                   Go to Profile
                 </button>
               </div>
             ) : (
-              <div className={`p-6 rounded-2xl shadow-lg ${
-                isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
-              }`}>
-                <h3 className={`text-xl font-bold mb-2 ${
-                  isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-                }`}>Personalized Workouts</h3>
-                <p className={`text-sm mb-6 ${
-                  isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
-                }`}>Based on your BMI: {(userProfile.weight / ((userProfile.height / 100) ** 2)).toFixed(1)}</p>
+              <div className="p-6 rounded-2xl shadow-lg " style={{ background: sidebar, borderColor: border }}>
+                <h3 className="text-xl font-bold mb-2 " style={{ color: text }}>Personalized Workouts</h3>
+                <p className="text-sm mb-6 " style={{ color: subtext }}>Based on your BMI: {(userProfile.weight / ((userProfile.height / 100) ** 2)).toFixed(1)}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   {getPersonalizedWorkouts().map((workout, index) => (
                     <div key={index} className={`p-6 rounded-2xl shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer ${
-                      isToggled ? 'bg-[#000000]/60 hover:bg-[#000000]/80' : 'bg-white/90 hover:bg-white'
+                      isToggled ? 'bg-[#000000]/60 hover:bg-[#000000]/80' : 'bg-[#D9EAFD]/90 hover:bg-white'
                     }`}>
                       <div className="text-center">
                         <div className="text-4xl mb-4">{workout.icon}</div>
-                        <h4 className={`text-lg font-bold mb-2 ${
-                          isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-                        }`}>{workout.name}</h4>
+                        <h4 className="text-lg font-bold mb-2 " style={{ color: text }}>{workout.name}</h4>
                         <div className="space-y-1 mb-4">
-                          <p className={`text-sm ${isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'}`}>
+                          <p className="text-sm " style={{ color: subtext }}>
                             {workout.duration} minutes
                           </p>
-                          <p className={`text-sm ${isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'}`}>
+                          <p className="text-sm " style={{ color: subtext }}>
                             ~{workout.calories} calories
                           </p>
                           <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
@@ -651,7 +620,7 @@ const FitnessTracker = () => {
                           className={`w-full py-2 rounded-lg font-medium transition-all duration-300 ${
                             isToggled 
                               ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/80 text-white' 
-                              : 'bg-[#8FABD4] hover:bg-[#8FABD4]/80 text-white'
+                              : 'bg-[#9AA6B2] hover:bg-[#9AA6B2]/80 text-white'
                           }`}
                         >
                           Add to Today
@@ -669,16 +638,10 @@ const FitnessTracker = () => {
         {activeTab === 'diet' && (
           <div className="space-y-8">
             {/* Water Intake */}
-            <div className={`p-6 rounded-2xl shadow-lg ${
-              isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
-            }`}>
-              <h3 className={`text-xl font-bold mb-4 ${
-                isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-              }`}>Water Intake</h3>
+            <div className="p-6 rounded-2xl shadow-lg " style={{ background: sidebar, borderColor: border }}>
+              <h3 className="text-xl font-bold mb-4 " style={{ color: text }}>Water Intake</h3>
               <div className="flex items-center justify-between mb-4">
-                <span className={`text-2xl font-bold ${
-                  isToggled ? 'text-[#8FABD4]' : 'text-gray-800'
-                }`}>{waterIntake} glasses</span>
+                <span className="text-2xl font-bold " style={{ color: text }}>{waterIntake} glasses</span>
                 <div className="flex gap-2">
                   <button
                     onClick={() => updateWaterIntake(-1)}
@@ -689,7 +652,7 @@ const FitnessTracker = () => {
                   <button
                     onClick={() => updateWaterIntake(1)}
                     className={`px-3 py-1 rounded ${
-                      isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#8FABD4] text-white'
+                      isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#9AA6B2] text-white'
                     }`}
                   >+</button>
                 </div>
@@ -697,12 +660,8 @@ const FitnessTracker = () => {
             </div>
 
             {/* Quick Meals */}
-            <div className={`p-6 rounded-2xl shadow-lg ${
-              isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
-            }`}>
-              <h3 className={`text-xl font-bold mb-4 ${
-                isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-              }`}>Quick Meals</h3>
+            <div className="p-6 rounded-2xl shadow-lg " style={{ background: sidebar, borderColor: border }}>
+              <h3 className="text-xl font-bold mb-4 " style={{ color: text }}>Quick Meals</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[
                   { name: 'Oatmeal', calories: 150, protein: 5, carbs: 27, fat: 3, type: 'breakfast' },
@@ -713,18 +672,14 @@ const FitnessTracker = () => {
                   { name: 'Brown Rice', calories: 110, protein: 3, carbs: 23, fat: 1, type: 'side' }
                 ].map((meal, index) => (
                   <div key={index} className={`p-4 rounded-lg border ${
-                    isToggled ? 'bg-[#8FABD4]/10 border-[#8FABD4]/30' : 'bg-gray-50 border-gray-200'
+                    isToggled ? 'bg-[#9AA6B2]/10 border-[#8FABD4]/30' : 'bg-gray-50 border-gray-200'
                   }`}>
-                    <h4 className={`font-semibold mb-2 ${
-                      isToggled ? 'text-[#8FABD4]' : 'text-gray-800'
-                    }`}>{meal.name}</h4>
-                    <p className={`text-sm mb-2 ${
-                      isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
-                    }`}>{meal.calories} cal</p>
+                    <h4 className="font-semibold mb-2 " style={{ color: text }}>{meal.name}</h4>
+                    <p className="text-sm mb-2 " style={{ color: subtext }}>{meal.calories} cal</p>
                     <button
                       onClick={() => addMeal(meal)}
                       className={`w-full py-2 rounded text-sm ${
-                        isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#8FABD4] text-white'
+                        isToggled ? 'bg-[#4A70A9] text-white' : 'bg-[#9AA6B2] text-white'
                       }`}
                     >
                       Add to Today
@@ -736,27 +691,19 @@ const FitnessTracker = () => {
 
             {/* Today's Meals */}
             {dietPlan && dietPlan.meals && dietPlan.meals.length > 0 && (
-              <div className={`p-6 rounded-2xl shadow-lg ${
-                isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
-              }`}>
-                <h3 className={`text-xl font-bold mb-4 ${
-                  isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-                }`}>Today's Meals</h3>
+              <div className="p-6 rounded-2xl shadow-lg " style={{ background: sidebar, borderColor: border }}>
+                <h3 className="text-xl font-bold mb-4 " style={{ color: text }}>Today's Meals</h3>
                 <div className="space-y-3">
                   {dietPlan.meals.map((meal) => (
                     <div key={meal.id} className={`p-4 rounded-lg border ${
                       meal.consumed
                         ? isToggled ? 'bg-[#4A70A9]/20 border-green-500' : 'bg-green-50 border-green-200'
-                        : isToggled ? 'bg-[#8FABD4]/10 border-[#8FABD4]/30' : 'bg-gray-50 border-gray-200'
+                        : isToggled ? 'bg-[#9AA6B2]/10 border-[#8FABD4]/30' : 'bg-gray-50 border-gray-200'
                     }`}>
                       <div className="flex items-center justify-between">
                         <div>
-                          <h4 className={`font-semibold ${
-                            isToggled ? 'text-[#8FABD4]' : 'text-gray-800'
-                          }`}>{meal.name}</h4>
-                          <p className={`text-sm ${
-                            isToggled ? 'text-[#8FABD4]/80' : 'text-gray-600'
-                          }`}>{meal.calories} cal • P: {meal.protein}g • C: {meal.carbs}g • F: {meal.fat}g</p>
+                          <h4 className="font-semibold " style={{ color: text }}>{meal.name}</h4>
+                          <p className="text-sm " style={{ color: subtext }}>{meal.calories} cal • P: {meal.protein}g • C: {meal.carbs}g • F: {meal.fat}g</p>
                         </div>
                         <input
                           type="checkbox"
@@ -788,12 +735,8 @@ const FitnessTracker = () => {
         {/* Progress Tab */}
         {activeTab === 'progress' && (
           <div className="space-y-8">
-            <div className={`p-6 rounded-2xl shadow-lg ${
-              isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
-            }`}>
-              <h3 className={`text-xl font-bold mb-6 ${
-                isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-              }`}>Weekly Progress</h3>
+            <div className="p-6 rounded-2xl shadow-lg " style={{ background: sidebar, borderColor: border }}>
+              <h3 className="text-xl font-bold mb-6 " style={{ color: text }}>Weekly Progress</h3>
               <div className="grid grid-cols-7 gap-4">
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => {
                   const progress = day === new Date().toLocaleDateString('en-US', { weekday: 'short' }) ? getWeeklyProgress() : 0
@@ -802,7 +745,7 @@ const FitnessTracker = () => {
                     <div key={day} className="text-center">
                       <p className={`text-sm font-medium mb-2 ${
                         isToday 
-                          ? isToggled ? 'text-[#4A70A9]' : 'text-[#8FABD4]'
+                          ? isToggled ? 'text-[#9AA6B2]' : 'text-[#8FABD4]'
                           : isToggled ? 'text-[#8FABD4]' : 'text-gray-600'
                       }`}>{day}</p>
                       <div className={`w-8 h-32 mx-auto rounded-full ${
@@ -810,7 +753,7 @@ const FitnessTracker = () => {
                       } relative overflow-hidden`}>
                         <div 
                           className={`absolute bottom-0 w-full rounded-full transition-all duration-500 ${
-                            isToggled ? 'bg-[#4A70A9]' : 'bg-[#8FABD4]'
+                            isToggled ? 'bg-[#4A70A9]' : 'bg-[#9AA6B2]'
                           }`}
                           style={{ height: `${progress}%` }}
                         />
@@ -825,12 +768,8 @@ const FitnessTracker = () => {
             </div>
 
             {/* Achievement Badges */}
-            <div className={`p-6 rounded-2xl shadow-lg ${
-              isToggled ? 'bg-[#000000]/60' : 'bg-white/90'
-            }`}>
-              <h3 className={`text-xl font-bold mb-6 ${
-                isToggled ? 'text-[#8FABD4]' : 'text-[#4A70A9]'
-              }`}>Achievements</h3>
+            <div className="p-6 rounded-2xl shadow-lg " style={{ background: sidebar, borderColor: border }}>
+              <h3 className="text-xl font-bold mb-6 " style={{ color: text }}>Achievements</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
                   { name: 'First Workout', icon: '🏆', earned: workouts.some(w => w.completed) },
@@ -841,7 +780,7 @@ const FitnessTracker = () => {
                   <div key={index} className={`p-4 rounded-lg text-center ${
                     badge.earned 
                       ? isToggled ? 'bg-[#4A70A9]/20' : 'bg-yellow-50'
-                      : isToggled ? 'bg-[#8FABD4]/10' : 'bg-gray-50'
+                      : isToggled ? 'bg-[#9AA6B2]/10' : 'bg-gray-50'
                   }`}>
                     <div className={`text-3xl mb-2 ${badge.earned ? '' : 'grayscale opacity-50'}`}>
                       {badge.icon}
@@ -858,6 +797,7 @@ const FitnessTracker = () => {
           </div>
         )}
       </div>
+      </main>
     </div>
   )
 }

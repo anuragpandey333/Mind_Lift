@@ -8,8 +8,8 @@ const Navbar = ({ isToggled, toggleTheme, isAuthenticated }) => {
   return (
     <nav className={`backdrop-blur-md shadow-lg border-b transition-all duration-500 fixed w-full top-0 z-50 ${
       isToggled 
-        ? 'bg-[#000000]/95 border-[#4A70A9]/30' 
-        : 'bg-[#EFECE3]/95 border-[#8FABD4]/20'
+        ? 'bg-[#000000]/95 border-[#BCCCDC]/30' 
+        : 'bg-[#F8FAFC]/95 border-[#D9EAFD]/20'
     }`}>
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
         <div className="flex justify-between items-center h-20">
@@ -18,8 +18,8 @@ const Navbar = ({ isToggled, toggleTheme, isAuthenticated }) => {
               onClick={toggleTheme}
               className={`flex items-center justify-center w-12 h-12 bg-gradient-to-br rounded-2xl shadow-lg transition-all duration-500 transform hover:scale-110 ${
                 isToggled 
-                  ? 'from-[#4A70A9] to-[#8FABD4] rotate-180' 
-                  : 'from-[#8FABD4] to-[#4A70A9] rotate-0'
+                  ? 'from-[#4A70A9] to-[#5A6F8C] rotate-180' 
+                  : 'from-[#4A70A9] to-[#5A6F8C] rotate-0'
               }`}
             >
               <svg className={`w-7 h-7 text-white transition-all duration-500 ${
@@ -30,26 +30,26 @@ const Navbar = ({ isToggled, toggleTheme, isAuthenticated }) => {
             </button>
             <h1 className={`text-2xl sm:text-3xl font-semibold bg-clip-text text-transparent tracking-wider transition-all duration-500 ${
               isToggled 
-                ? 'bg-gradient-to-r from-[#8FABD4] via-[#4A70A9] to-[#8FABD4]' 
-                : 'bg-gradient-to-r from-[#4A70A9] via-[#8FABD4] to-[#4A70A9]'
+                ? 'bg-gradient-to-r from-[#4A70A9] via-[#5A6F8C] to-[#4A70A9]' 
+                : 'bg-gradient-to-r from-[#4A70A9] via-[#5A6F8C] to-[#4A70A9]'
             }`}>MindLift</h1>
           </div>
           
           <div className="hidden md:flex items-center space-x-8">
             <button onClick={() => navigate('/about')} className={`font-semibold text-sm tracking-wide transition-all duration-300 hover:scale-105 ${
               isToggled 
-                ? 'text-[#8FABD4] hover:text-[#4A70A9]' 
-                : 'text-[#4A70A9] hover:text-[#8FABD4]'
+                ? 'text-[#9AA6B2] hover:text-[#4A70A9]' 
+                : 'text-[#4A70A9] hover:text-[#5A6F8C]'
             }`}>About</button>
             <button onClick={() => navigate('/features')} className={`font-semibold text-sm tracking-wide transition-all duration-300 hover:scale-105 ${
               isToggled 
-                ? 'text-[#8FABD4] hover:text-[#4A70A9]' 
-                : 'text-[#4A70A9] hover:text-[#8FABD4]'
+                ? 'text-[#9AA6B2] hover:text-[#4A70A9]' 
+                : 'text-[#4A70A9] hover:text-[#5A6F8C]'
             }`}>Features</button>
             <button onClick={() => navigate('/contact')} className={`font-semibold text-sm tracking-wide transition-all duration-300 hover:scale-105 ${
               isToggled 
-                ? 'text-[#8FABD4] hover:text-[#4A70A9]' 
-                : 'text-[#4A70A9] hover:text-[#8FABD4]'
+                ? 'text-[#9AA6B2] hover:text-[#4A70A9]' 
+                : 'text-[#4A70A9] hover:text-[#5A6F8C]'
             }`}>Contact</button>
           </div>
           
@@ -73,7 +73,7 @@ const Navbar = ({ isToggled, toggleTheme, isAuthenticated }) => {
                 className={`text-white px-6 py-3 rounded-full font-medium shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 ${
                   isToggled 
                     ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/90' 
-                    : 'bg-[#8FABD4] hover:bg-[#8FABD4]/90'
+                    : 'bg-[#4A70A9] hover:bg-[#5A6F8C]'
                 }`}
               >
                 Dashboard
@@ -84,8 +84,8 @@ const Navbar = ({ isToggled, toggleTheme, isAuthenticated }) => {
                   onClick={() => navigate('/login')}
                   className={`font-semibold text-sm tracking-wide transition-all duration-300 px-4 py-2 rounded-full border ${
                     isToggled 
-                      ? 'text-[#8FABD4] hover:text-white border-[#4A70A9] hover:bg-[#4A70A9]' 
-                      : 'text-[#4A70A9] hover:text-[#8FABD4] hover:bg-[#8FABD4]/20 border-transparent'
+                      ? 'text-[#9AA6B2] hover:text-white border-[#4A70A9] hover:bg-[#4A70A9]' 
+                      : 'text-[#4A70A9] hover:text-white hover:bg-[#4A70A9] border-[#4A70A9]'
                   }`}
                 >
                   Sign In
@@ -94,11 +94,11 @@ const Navbar = ({ isToggled, toggleTheme, isAuthenticated }) => {
                   onClick={() => navigate('/signup')}
                   className={`text-white px-4 py-2 sm:px-6 sm:py-3 rounded-full font-semibold tracking-wide shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 text-sm sm:text-base ${
                     isToggled 
-                      ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/90' 
-                      : 'bg-[#8FABD4] hover:bg-[#8FABD4]/90'
+                      ? 'bg-[#4A70A9] hover:bg-[#5A6F8C]' 
+                      : 'bg-[#4A70A9] hover:bg-[#5A6F8C]'
                   }`}
                 >
-                   Start Learning
+                   Get Started
                 </button>
               </>
             )}
@@ -115,18 +115,18 @@ const Navbar = ({ isToggled, toggleTheme, isAuthenticated }) => {
           <div className="px-6 py-4 space-y-4">
             <button onClick={() => { navigate('/about'); setIsMobileMenuOpen(false); }} className={`block font-medium transition-colors ${
               isToggled 
-                ? 'text-[#FFF2EF] hover:text-[#FFDBB6]' 
-                : 'text-gray-600 hover:text-[#687FE5]'
+                ? 'text-[#9AA6B2] hover:text-[#4A70A9]' 
+                : 'text-[#4A70A9] hover:text-[#5A6F8C]'
             }`}>About</button>
             <button onClick={() => { navigate('/features'); setIsMobileMenuOpen(false); }} className={`block font-medium transition-colors ${
               isToggled 
-                ? 'text-[#FFF2EF] hover:text-[#FFDBB6]' 
-                : 'text-gray-600 hover:text-[#687FE5]'
+                ? 'text-[#9AA6B2] hover:text-[#4A70A9]' 
+                : 'text-[#4A70A9] hover:text-[#5A6F8C]'
             }`}>Features</button>
             <button onClick={() => { navigate('/contact'); setIsMobileMenuOpen(false); }} className={`block font-medium transition-colors ${
               isToggled 
-                ? 'text-[#FFF2EF] hover:text-[#FFDBB6]' 
-                : 'text-gray-600 hover:text-[#687FE5]'
+                ? 'text-[#9AA6B2] hover:text-[#4A70A9]' 
+                : 'text-[#4A70A9] hover:text-[#5A6F8C]'
             }`}>Contact</button>
             
             <div className="pt-4 space-y-3">
@@ -135,8 +135,8 @@ const Navbar = ({ isToggled, toggleTheme, isAuthenticated }) => {
                   onClick={() => navigate('/dashboard')}
                   className={`w-full text-white py-3 rounded-full font-medium shadow-md transition-all duration-300 ${
                     isToggled 
-                      ? 'bg-[#8B4513] hover:bg-[#8B4513]/90' 
-                      : 'bg-[#8B4513] hover:bg-[#8B4513]/90'
+                      ? 'bg-[#4A70A9] hover:bg-[#5A6F8C]' 
+                      : 'bg-[#4A70A9] hover:bg-[#5A6F8C]'
                   }`}
                 >
                   Dashboard
@@ -147,8 +147,8 @@ const Navbar = ({ isToggled, toggleTheme, isAuthenticated }) => {
                     onClick={() => navigate('/login')}
                     className={`w-full font-medium py-3 rounded-full transition-all duration-300 border ${
                       isToggled 
-                        ? 'text-[#D2B48C] border-[#8B4513] hover:bg-[#8B4513] hover:text-white' 
-                        : 'text-[#5A5A5A] hover:bg-[#DEB887]/50 border-transparent'
+                        ? 'text-[#9AA6B2] border-[#4A70A9] hover:bg-[#4A70A9] hover:text-white' 
+                        : 'text-[#4A70A9] hover:bg-[#4A70A9]/10 border-[#4A70A9]'
                     }`}
                   >
                     Sign In
@@ -157,11 +157,11 @@ const Navbar = ({ isToggled, toggleTheme, isAuthenticated }) => {
                     onClick={() => navigate('/signup')}
                     className={`w-full text-white py-3 rounded-full font-medium shadow-md transition-all duration-300 ${
                       isToggled 
-                        ? 'bg-[#8B4513] hover:bg-[#8B4513]/90' 
-                        : 'bg-[#8B4513] hover:bg-[#8B4513]/90'
+                        ? 'bg-[#4A70A9] hover:bg-[#5A6F8C]' 
+                        : 'bg-[#4A70A9] hover:bg-[#5A6F8C]'
                     }`}
                   >
-                    Start Learning
+                    Get Started
                   </button>
                 </>
               )}

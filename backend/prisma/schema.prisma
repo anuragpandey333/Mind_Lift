@@ -12,12 +12,16 @@ model User {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String
   email     String   @unique
-  password  String
+  password  String?
+  googleId  String?  @unique
   role      String   @default("student")
   profilePhoto String?
   bio       String?
   phone     String?
   location  String?
+  currentStreak    Int      @default(0)
+  longestStreak    Int      @default(0)
+  lastActivityDate String?  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   moodEntries MoodEntry[]

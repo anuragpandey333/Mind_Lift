@@ -1,11 +1,12 @@
 const express = require('express')
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
+const { OAuth2Client } = require('google-auth-library')
 const prisma = require('../lib/prisma')
 const auth = require('../middleware/auth')
 
-
 const router = express.Router()
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET, process.env.REDIRECT_URI)
 
 
 router.post('/signup', async (req, res) => {
@@ -84,6 +85,9 @@ router.post('/login', async (req, res) => {
     }
 
    
+    if (!user.password) {
+      return res.status(400).json({ message: 'This account uses Google login. Please sign in with Google.' })
+    }
     const isMatch = await bcrypt.compare(password, user.password)
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid credentials' })
@@ -124,7 +128,10 @@ router.get('/me', auth, async (req, res) => {
         profilePhoto: true,
         bio: true,
         phone: true,
-        location: true
+        location: true,
+        currentStreak: true,
+        longestStreak: true,
+        lastActivityDate: true
       }
     })
     
@@ -184,6 +191,45 @@ router.put('/profile', auth, async (req, res) => {
 
 
 
+
+// Google OAuth - redirect to Google
+router.get('/google', (req, res) => {
+  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(process.env.REDIRECT_URI)}&response_type=code&scope=openid%20email%20profile&access_type=offline&prompt=consent`
+  res.redirect(url)
+})
+
+// Google OAuth - callback
+router.get('/google/callback', async (req, res) => {
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5174'
+  try {
+    const { code } = req.query
+    if (!code) return res.redirect(`${frontendUrl}/login?error=no_code`)
+
+    // Exchange code for tokens
+    const tokenRes = await googleClient.getToken(code)
+    const ticket = await googleClient.verifyIdToken({
+      idToken: tokenRes.tokens.id_token,
+      audience: process.env.GOOGLE_CLIENT_ID
+    })
+    const { sub: googleId, email, name, picture } = ticket.getPayload()
+
+    await prisma.$connect()
+    let user = await prisma.user.findFirst({ where: { OR: [{ googleId }, { email }] } })
+
+    if (user) {
+      if (!user.googleId) await prisma.user.update({ where: { id: user.id }, data: { googleId } })
+    } else {
+      user = await prisma.user.create({ data: { name, email, googleId, profilePhoto: picture } })
+    }
+
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '7d' })
+    const userParam = encodeURIComponent(JSON.stringify({ id: user.id, name: user.name, email: user.email, role: user.role, profilePhoto: user.profilePhoto }))
+    res.redirect(`${frontendUrl}/auth/google/callback?token=${token}&user=${userParam}`)
+  } catch (error) {
+    console.error('Google OAuth error:', error)
+    res.redirect(`${frontendUrl}/login?error=oauth_failed`)
+  }
+})
 
 router.get('/test-redirect', (req, res) => {
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'

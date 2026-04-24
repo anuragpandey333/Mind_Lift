@@ -1,24 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
+import { useTheme } from '../useTheme';
 
 const Features = () => {
   const navigate = useNavigate();
-  const [isToggled, setIsToggled] = useState(false);
+  const { isToggled, toggleTheme } = useTheme();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    const theme = localStorage.getItem('theme');
     setIsAuthenticated(!!token);
-    setIsToggled(theme === 'dark');
   }, []);
 
-  const toggleTheme = () => {
-    const newTheme = !isToggled;
-    setIsToggled(newTheme);
-    localStorage.setItem('theme', newTheme ? 'dark' : 'light');
-  };
+  const toggleThemeAndSave = () => toggleTheme();
 
   const features = [
     {
@@ -87,13 +82,13 @@ const Features = () => {
     <div className={`min-h-screen transition-all duration-700 ${
       isToggled 
         ? 'bg-gradient-to-br from-[#000000] via-[#1a1a1a] to-[#333333]' 
-        : 'bg-gradient-to-br from-[#EFECE3] via-[#f5f2e9] to-[#e8e5dc]'
+        : 'bg-gradient-to-br from-[#F8FAFC] via-[#f5f2e9] to-[#e8e5dc]'
     }`}>
       {/* Navigation */}
       <nav className={`backdrop-blur-md shadow-sm border-b transition-all duration-500 ${
         isToggled 
-          ? 'bg-[#000000]/90 border-[#4A70A9]/30' 
-          : 'bg-[#EFECE3]/80 border-[#8FABD4]/20'
+          ? 'bg-[#000000]/90 border-[#BCCCDC]/30' 
+          : 'bg-[#F8FAFC]/80 border-[#D9EAFD]/20'
       }`}>
         <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12">
           <div className="flex justify-between items-center h-20">
@@ -102,8 +97,8 @@ const Features = () => {
                 onClick={toggleTheme}
                 className={`flex items-center justify-center w-12 h-12 bg-gradient-to-br rounded-2xl shadow-lg transition-all duration-500 transform hover:scale-110 ${
                   isToggled 
-                    ? 'from-[#4A70A9] to-[#8FABD4] rotate-180' 
-                    : 'from-[#8FABD4] to-[#4A70A9] rotate-0'
+                    ? 'from-[#BCCCDC] to-[#D9EAFD] rotate-180' 
+                    : 'from-[#D9EAFD] to-[#BCCCDC] rotate-0'
                 }`}
               >
                 <svg className={`w-7 h-7 text-white transition-all duration-500 ${
@@ -116,8 +111,8 @@ const Features = () => {
                 onClick={() => navigate('/dashboard')}
                 className={`text-3xl font-semibold bg-clip-text text-transparent tracking-wider transition-all duration-500 hover:opacity-80 ${
                   isToggled 
-                    ? 'bg-gradient-to-r from-[#8FABD4] via-[#4A70A9] to-[#8FABD4]' 
-                    : 'bg-gradient-to-r from-[#4A70A9] via-[#8FABD4] to-[#4A70A9]'
+                    ? 'bg-gradient-to-r from-[#D9EAFD] via-[#BCCCDC] to-[#D9EAFD]' 
+                    : 'bg-gradient-to-r from-[#BCCCDC] via-[#D9EAFD] to-[#BCCCDC]'
                 }`}
               >
                 MindLift
@@ -127,18 +122,18 @@ const Features = () => {
             <div className="hidden md:flex items-center space-x-8">
               <button onClick={() => navigate('/features')} className={`font-semibold text-sm tracking-wide transition-all duration-300 hover:scale-105 ${
                 isToggled 
-                  ? 'text-[#8FABD4] hover:text-[#4A70A9]' 
-                  : 'text-[#4A70A9] hover:text-[#8FABD4]'
+                  ? 'text-[#D9EAFD] hover:text-[#BCCCDC]' 
+                  : 'text-[#BCCCDC] hover:text-[#D9EAFD]'
               }`}>Features</button>
               <button onClick={() => navigate('/about')} className={`font-semibold text-sm tracking-wide transition-all duration-300 hover:scale-105 ${
                 isToggled 
-                  ? 'text-[#8FABD4] hover:text-[#4A70A9]' 
-                  : 'text-[#4A70A9] hover:text-[#8FABD4]'
+                  ? 'text-[#D9EAFD] hover:text-[#BCCCDC]' 
+                  : 'text-[#BCCCDC] hover:text-[#D9EAFD]'
               }`}>About</button>
               <button onClick={() => navigate('/contact')} className={`font-semibold text-sm tracking-wide transition-all duration-300 hover:scale-105 ${
                 isToggled 
-                  ? 'text-[#8FABD4] hover:text-[#4A70A9]' 
-                  : 'text-[#4A70A9] hover:text-[#8FABD4]'
+                  ? 'text-[#D9EAFD] hover:text-[#BCCCDC]' 
+                  : 'text-[#BCCCDC] hover:text-[#D9EAFD]'
               }`}>Contact</button>
             </div>
             
@@ -146,8 +141,8 @@ const Features = () => {
               onClick={() => navigate('/dashboard')}
               className={`text-white px-6 py-2 rounded-full font-medium shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 ${
                 isToggled 
-                  ? 'bg-[#4A70A9] hover:bg-[#4A70A9]/90' 
-                  : 'bg-[#8FABD4] hover:bg-[#8FABD4]/90'
+                  ? 'bg-[#BCCCDC] hover:bg-[#BCCCDC]/90' 
+                  : 'bg-[#D9EAFD] hover:bg-[#D9EAFD]/90'
               }`}
             >
               Back to Dashboard
@@ -161,10 +156,10 @@ const Features = () => {
         {/* Hero Section */}
         <div className="text-center mb-16">
           <h1 className={`text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 transition-all duration-500 ${
-            isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
+            isToggled ? 'text-[#D9EAFD]' : 'text-[#000000]'
           }`}>Platform Features</h1>
           <p className={`text-lg sm:text-xl max-w-3xl mx-auto transition-all duration-500 ${
-            isToggled ? 'text-[#8FABD4]/80' : 'text-[#000000]/80'
+            isToggled ? 'text-[#D9EAFD]/80' : 'text-[#000000]/80'
           }`}>
             Comprehensive tools designed specifically for student mental wellness and productivity
           </p>
@@ -177,25 +172,25 @@ const Features = () => {
               key={index}
               className={`p-8 rounded-2xl shadow-lg border transition-all duration-500 hover:scale-105 ${
                 isToggled 
-                  ? 'bg-[#000000]/60 border-[#8FABD4]/20' 
-                  : 'bg-white/90 border-[#8FABD4]/10'
+                  ? 'bg-[#000000]/60 border-[#D9EAFD]/20' 
+                  : 'bg-white/90 border-[#D9EAFD]/10'
               }`}
             >
               <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 ${
                 isToggled 
-                  ? 'bg-gradient-to-r from-[#4A70A9] to-[#8FABD4]' 
-                  : 'bg-gradient-to-r from-[#8FABD4] to-[#4A70A9]'
+                  ? 'bg-gradient-to-r from-[#BCCCDC] to-[#D9EAFD]' 
+                  : 'bg-gradient-to-r from-[#D9EAFD] to-[#BCCCDC]'
               }`}>
                 {feature.icon}
               </div>
               <h3 className={`text-2xl font-bold mb-4 ${
-                isToggled ? 'text-[#8FABD4]' : 'text-[#000000]'
+                isToggled ? 'text-[#D9EAFD]' : 'text-[#000000]'
               }`}>{feature.title}</h3>
               <p className={`text-lg mb-4 ${
-                isToggled ? 'text-[#8FABD4]/80' : 'text-[#000000]/80'
+                isToggled ? 'text-[#D9EAFD]/80' : 'text-[#000000]/80'
               }`}>{feature.description}</p>
               <p className={`text-sm mb-6 ${
-                isToggled ? 'text-[#8FABD4]/60' : 'text-[#000000]/60'
+                isToggled ? 'text-[#D9EAFD]/60' : 'text-[#000000]/60'
               }`}>{feature.details}</p>
               <button 
                 onClick={() => {
@@ -209,8 +204,8 @@ const Features = () => {
                 }}
                 className={`w-full text-sm font-semibold px-6 py-3 rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl ${
                   isToggled 
-                    ? 'bg-gradient-to-r from-[#4A70A9] to-[#8FABD4] text-white' 
-                    : 'bg-gradient-to-r from-[#8FABD4] to-[#4A70A9] text-white'
+                    ? 'bg-gradient-to-r from-[#BCCCDC] to-[#D9EAFD] text-white' 
+                    : 'bg-gradient-to-r from-[#D9EAFD] to-[#BCCCDC] text-white'
                 }`}>
                 Get Started
               </button>
