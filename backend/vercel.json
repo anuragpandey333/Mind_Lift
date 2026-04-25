@@ -16,6 +16,6 @@
     "DATABASE_URL": "@database_url",
     "JWT_SECRET": "@jwt_secret",
     "FRONTEND_URL": "https://mind-lift-28xy.vercel.app",
-    "REDIRECT_URI": "https://mind-lift-capstone-2.onrender.com/api/auth/google/callback"
+    "REDIRECT_URI": "https://mind-lift-five.vercel.app/api/auth/google/callback"
   }
 }
