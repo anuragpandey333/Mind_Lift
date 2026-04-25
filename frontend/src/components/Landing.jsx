@@ -91,6 +91,29 @@ const Landing = () => {
                 Sign In
               </button>
             </div>
+
+            {/* AI Assistant Highlight */}
+            <div className={`mt-10 p-6 rounded-2xl border flex flex-col sm:flex-row items-center gap-5 text-left ${
+              isToggled
+                ? 'bg-gradient-to-r from-[#1a2e45] to-[#0d1b2a] border-[#4A70A9]/60'
+                : 'bg-gradient-to-r from-[#4A70A9] to-[#5A6F8C] border-[#3a5a8c]/30'
+            }`}>
+              <div className={`w-14 h-14 rounded-xl flex-shrink-0 flex items-center justify-center shadow-lg ${
+                isToggled
+                  ? 'bg-gradient-to-br from-[#4A70A9] to-[#D9EAFD]/30'
+                  : 'bg-white/20'
+              }`}>
+                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17H4a2 2 0 01-2-2V5a2 2 0 012-2h16a2 2 0 012 2v10a2 2 0 01-2 2h-1" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold mb-1 text-white">AI-Powered Assistant</h3>
+                <p className="text-sm leading-relaxed text-white/85">
+                  Experience smarter mental wellness support with our built-in AI Assistant — get intelligent insights, personalized suggestions, and real-time guidance to help you track your mood, manage stress, and build healthier habits every day.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -173,6 +196,7 @@ const Landing = () => {
               }`}>Comprehensive fitness tracking, diet planning, and productivity tools.</p>
             </div>
           </div>
+
         </div>
 
         {/* Testimonials Section */}

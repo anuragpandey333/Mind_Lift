@@ -17,7 +17,7 @@ const GoogleCallback = ({ setIsAuthenticated }) => {
         localStorage.setItem('user', JSON.stringify(user))
         localStorage.setItem('isNewUser', 'false')
         setIsAuthenticated(true)
-        navigate('/')
+        navigate('/dashboard')
       } catch (error) {
         console.error('Error parsing user data:', error)
         navigate('/login')
