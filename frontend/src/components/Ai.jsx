@@ -116,20 +116,22 @@ function Ai() {
     setInputMessage("")
     setIsLoading(true)
 
-    const contents = updatedMessages.map((msg) => ({
-      role: msg.isUser ? "user" : "model",
-      parts: [{ text: msg.text }],
+    const groqMessages = updatedMessages.map((msg) => ({
+      role: msg.isUser ? 'user' : 'assistant',
+      content: msg.text
     }))
 
     try {
+      const token = localStorage.getItem('token')
       const res = await axios.post(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,
-        { contents },
-        { headers: { 'Content-Type': 'application/json' } }
+        `${import.meta.env.VITE_API_URL}/api/chat/ai`,
+        { messages: groqMessages },
+        { headers: { Authorization: `Bearer ${token}` } }
       )
-      const aiResponse = res.data?.candidates?.[0]?.content?.parts?.[0]?.text || "I couldn't generate a response."
+      const aiResponse = res.data?.reply || "I couldn't generate a response."
       setMessages((prev) => [...prev, { text: aiResponse, isUser: false, id: Date.now() + 1 }])
-    } catch {
+    } catch (err) {
+      console.error('Chat error:', err.response?.data || err.message)
       const localResponse = getLocalResponse(userMessage)
       setMessages((prev) => [...prev, { text: localResponse, isUser: false, id: Date.now() + 1 }])
     } finally {

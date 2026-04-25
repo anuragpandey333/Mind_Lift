@@ -70,10 +70,54 @@ const MoodTracker = () => {
     }
   }
 
+  const analyzeMood = () => {
+    // Each input is treated independently — no averaging that cancels signals
+
+    // --- STRESS is a dominant signal ---
+    // High stress (8-10) = Overwhelmed regardless of other inputs
+    // Moderate stress (6-7) = Stressed, unless energy+sleep are both very high
+    if (stressLevel >= 8) {
+      return { label: 'Overwhelmed', emoji: 'sad' }
+    }
+    if (stressLevel >= 6) {
+      // Only escape Stressed if both sleep AND energy are genuinely high (8+)
+      if (sleepQuality >= 8 && energyLevel >= 8) {
+        return { label: 'Stressed', emoji: 'worried' } // still stressed, just coping
+      }
+      return { label: 'Stressed', emoji: 'worried' }
+    }
+
+    // --- LOW ENERGY or POOR SLEEP dominates when stress is manageable ---
+    if (energyLevel <= 3 || sleepQuality <= 3) {
+      return { label: 'Low / Tired', emoji: 'tired' }
+    }
+
+    // --- HAPPY: low stress + good sleep + good energy ---
+    if (stressLevel <= 3 && sleepQuality >= 7 && energyLevel >= 7) {
+      // Boost to Productive if social connection is also high
+      if (socialConnection >= 7 || physicalActivity === 'moderate' || physicalActivity === 'intense') {
+        return { label: 'Productive / Energized', emoji: 'energized' }
+      }
+      return { label: 'Happy', emoji: 'happy' }
+    }
+
+    // --- PRODUCTIVE: moderate stress but high energy + decent sleep ---
+    if (stressLevel <= 5 && energyLevel >= 7 && sleepQuality >= 6) {
+      return { label: 'Productive / Energized', emoji: 'energized' }
+    }
+
+    // --- NORMAL: everything in mid range ---
+    if (stressLevel <= 5 && energyLevel >= 4 && sleepQuality >= 4) {
+      return { label: 'Normal', emoji: 'neutral' }
+    }
+
+    // --- Fallback ---
+    return { label: 'Normal', emoji: 'neutral' }
+  }
+
   const saveMoodEntry = async () => {
     try {
-      const moodLabel = stressLevel <= 3 ? 'Great' : stressLevel <= 5 ? 'Okay' : stressLevel <= 7 ? 'Stressed' : 'Overwhelmed'
-      const moodEmoji = stressLevel <= 3 ? 'happy' : stressLevel <= 5 ? 'neutral' : stressLevel <= 7 ? 'worried' : 'sad'
+      const { label: moodLabel, emoji: moodEmoji } = analyzeMood()
       
       const token = localStorage.getItem('token')
       await axios.post(`${import.meta.env.VITE_API_URL}/api/mood`, {
@@ -527,7 +571,7 @@ const MoodTracker = () => {
                         </button>
                       </div>
                       <div className="text-xs " style={{ color: subtext }}>
-                        Stress: {entry.stressLevel}/10
+                        Stress: {entry.stressLevel}/10 • Sleep: {entry.sleepQuality}/10 • Energy: {entry.energyLevel}/10
                         {entry.trigger && ` • ${entry.trigger}`}
                       </div>
                     </div>

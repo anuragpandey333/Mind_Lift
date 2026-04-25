@@ -44,6 +44,12 @@ try {
   console.error('Routes error:', error)
 }
 
+try {
+  app.use('/api/chat', require('./routes/chat'))
+} catch (error) {
+  console.error('Routes error:', error)
+}
+
 module.exports = app
 
 // For local development
