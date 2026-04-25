@@ -4,7 +4,7 @@ import Navbar from './Navbar';
 import { useTheme } from '../useTheme';
 
 const About = () => {
-  const navigate = useNavigate();
+  const navigate =  useNavigate();
   const { isToggled, toggleTheme } = useTheme();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 

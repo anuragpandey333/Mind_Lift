@@ -13,8 +13,9 @@
     }
   ],
   "env": {
-    "DATABASE_URL": "mongodb+srv://anuragpandey2024_db_user:7z9lDBmbgLVUqtJO@mindlift.ri47vck.mongodb.net/mindlift?retryWrites=true&w=majority&appName=MindLift&maxPoolSize=1&serverSelectionTimeoutMS=5000&socketTimeoutMS=45000",
-    "JWT_SECRET": "mindlift_super_secret_jwt_key_2024_production",
-    "FRONTEND_URL": "https://mind-lift-28xy.vercel.app"
+    "DATABASE_URL": "@database_url",
+    "JWT_SECRET": "@jwt_secret",
+    "FRONTEND_URL": "https://mind-lift-28xy.vercel.app",
+    "REDIRECT_URI": "https://mind-lift-capstone-2.onrender.com/api/auth/google/callback"
   }
 }
